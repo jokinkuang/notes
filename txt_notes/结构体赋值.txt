@@ -1,0 +1,57 @@
+结构体赋值:
+结构体赋值，相当于memcpy操作，可以用一个结构体对另一个结构体赋值。无论结构体自身包含 指针，数组，普通类型还是其它复合类型。
+C里面支持。
+
+struct gitone_msg {
+     gitone_msg_type type;
+     char            date[GITONE_DATE_STR_LEN]; /* format: 2014-03-11 12:23:00 */
+};
+ 
+struct gitone_pos_info {
+    gitone_pos_type type;
+    char date[GITONE_DATE_STR_LEN]; /* format: 2014-03-11 12:23:00 */
+    union {
+        struct gps_pos {
+            double lng;
+            double lat;
+        } gps;
+        struct cell_info {
+            unsigned int mnc;
+            unsigned int cell;
+            unsigned int lac;
+        } cell;                             //联合也用冒号！
+    } u;
+};
+
+
+上面的结构体，成员有字符数组（字符串），指针，枚举还是其它什么等等，赋值都可以将这些内容复制到另一个结构体！
+
+需要注意的是，操作是可行的，但还是要注意一些隐含细节。
+比如，如果是char *ptr这样的指针成员，赋值只是将两个结构体的指针指向同一个内存单元。要深度复制，即将内容都复制，则需要char str[30]这样的一段内存空间！
+
+二，结构体在定义时指定初始值：     
+    这种做法是错误的！！
+ 51 struct condi_server_pkg {   
+ 52     uint8_t  start          = 0xAA;
+ 53     uint8_t  cmd;
+ 54     uint16_t dst;
+ 55     uint16_t src;
+ 56     struct   condi_server_data data;
+ 57     uint8_t  check_sum;     
+ 58     uint8_t  end            = 0x55;
+ 59 };
+
+  上面的初始化是错误的。因为，结构体在声明时，并没有分配空间，因此不能直接初始化！！只能在声明后，创建变量的时候，指定初始化。
+
+三，结构体的位域：
+ 51 struct condi_server_pkg {   
+ 52     uint8_t  start          : 0xAA;
+ 53     uint8_t  cmd;
+ 54     uint16_t dst;
+ 55     uint16_t src;
+ 56     struct   condi_server_data data;
+ 57     uint8_t  check_sum;     
+ 58     uint8_t  end            : 0x55;
+ 59 };
+
+   以上不是进行初始化，而是结构体的位域。而且，上面是错误的。

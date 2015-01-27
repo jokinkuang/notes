@@ -1,0 +1,42 @@
+JAVA 在配置环境时的错误解决：
+
+1，常见的包路径错误。
+	DET/org/label/labelInter.java
+	
+    labelInter.java  的包声明是   package org.label
+	则，如何让这个文件生效呢？
+    在PackageExplorer里，右键DET文件夹，BuildPath，used as source folder。这样，DET文件夹就被移动到src同级。DET/目录下的路径就成为了包路径。
+
+    OPT/src/org/label/labelInter.java
+	声明仍旧是 package org.label
+	这时，则要在src右键，BuildPath，used as source。
+
+    以上操作最好在packageExploer里面操作。操作完成后，包的浏览会变成：
+	DEV
+    - org.label			//org.label就是对应包声明
+	OPT/src 
+	- org.label
+
+    看到的就是包声明。如果和包声明不对应，说明作为源文件夹的目录使用错误。
+
+	总结：
+	1，看java里面的包的声明。若是 org.label, 则org上一个目录要被作为源文件目录！！ 就是这么简单。
+
+2，常见的main方法不存在。但是，main方法确实在那里！！
+
+	问题原因： 没有将该类加入源文件目录中。
+	
+	问题解决： 按照问题1，将类所在的包加入到源文件目录中即可。
+
+3，常见的类Not Found。
+
+	问题原因： 类无法找到。可能是，1，类没有加入到源文件目录。2，类是一个外部包，包没有被引入。
+
+	问题解决： 1，若类没有加入到源文件中，简单。
+			  2，若类是一个外部包，则要下载该外部jar包，然后在工程属性，BuildPath里，libraries里add external jars加入外部包即可。
+
+4，导入cvs项目问题。
+	一般，都是先建立一个项目，再导入，选择cvs，然后填写。
+	直接在文件，项目，导入可能会失败。未确定。
+
+

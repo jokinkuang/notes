@@ -1,0 +1,29 @@
+/* Compare string without upper and lower case */
+#ifndef tolower
+#define tolower(T) (unsigned char)(T | 0x20)
+#endif
+static int __strcmp(const char *s1, const char *s2) {
+    unsigned char c1, c2;
+    unsigned int len = strlen(s1);
+    c1 = c2 = 0;
+    if (len) {
+        do {
+            c1 = *s1;
+            c2 = *s2;
+            s1++;
+            s2++;
+            if (!c1)
+                break;
+            if (!c2)
+                break;
+            if (c1 == c2)
+                continue;
+            c1 = tolower(c1);
+            c2 = tolower(c2);
+            if (c1 != c2)
+                break;
+        } while (--len);
+    }
+    return (int)c1 - (int)c2;
+}
+

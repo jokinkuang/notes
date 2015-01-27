@@ -1,0 +1,96 @@
+aliyun linux配置apache2 + mysql5.1 + php5.3，并安装wordpress3.9
+
+1，添加源。
+    #导入key
+    rpm --import http://ftp.twaren.net/Linux/CentOS/RPM-GPG-KEY-CentOS-5
+
+    #查看key
+    rpm -qa gpg-pubkey*
+
+    #添加源
+    vim /etc/yum.repos.d/rhel-debuginfo.repo
+
+    #添加以下内容
+    ##################################################################
+    [rhel-debuginfo]
+    name=Red Hat Enterprise Linux $releasever - $basearch - Debug
+    baseurl=ftp://ftp.redhat.com/pub/redhat/linux/enterprise/$releasever/en/os/$basearch/Debuginfo/
+    #baseurl是你的YUM源地址
+
+    enabled=0
+    #是否启用这个仓库，1为起用，0为禁用
+
+    gpgcheck=1
+    #设置gpgcheck=1会让yum检查每个下载的RPM的GnuPG签名。这么做是因为你需要适当的GnuPG key注册到您的RPM数据库。可以防止被欺骗，如：非法入侵发行版网站，木马导入软件>包，使不知情用户下载
+
+    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+    #GPGKEY 的存放地址
+
+    #以上默认有的，复制添加以下更新点插入到rhel-debuginfo.repo文本里后面
+    [base]
+    name=Red Hat Enterprise Linux $releasever -Base
+    baseurl=http://ftp.twaren.net/Linux/CentOS/5/os/$basearch/
+    gpgcheck=1
+
+    [update]
+    name=Red Hat Enterprise Linux $releasever -Updates
+    baseurl=http://ftp.twaren.net/Linux/CentOS/5/updates/$basearch/
+    gpgcheck=1
+
+    [extras]
+    name=Red Hat Enterprise Linux $releasever -Extras
+    baseurl=http://ftp.twaren.net/Linux/CentOS/5/extras/$basearch/
+    gpgcheck=1
+
+    [addons]
+    name=Red Hat Enterprise Linux $releasever -Addons
+    baseurl=http://ftp.twaren.net/Linux/CentOS/5/addons/$basearch/
+    gpgcheck=1
+    ################################################################
+    
+    #生成cache
+    yum makecache
+    
+    #完成
+     
+2，安装apache2.2
+    #安装httpd
+    yum install httpd      #会打印出所有依赖包
+    
+    #启动服务
+    service httpd start
+     
+3，安装php5.3
+    #安装php53
+    yum install php53       
+    
+    #安装php53-mysql
+    yum install php53-mysql
+     
+4，安装mysql5.5
+    #安装mysql55
+    yum install mysql55 
+    
+    #更改服务名
+    cp /etc/init.d/mysql55-mysqld /etc/init.d/mysqld
+
+    #启动服务
+    service mysqld start
+    
+以上安装，可以直接到http://ftp.twaren.net/Linux/CentOS/5/base|updates等目录下查找对应的rpm包及依赖的rpm包进行安装。
+    #安装主程序及依赖包
+    rpm -ivh *.rpm    
+    #缺少依赖会被打印出错误信息，下载对应的依赖包，再安装。
+    
+    #查看已安装包信息
+    rpm -qa php|mysql|程序名
+    
+    #移除软件包
+    yum -remove php|mysql|程序名   #注：只移除主包，不移除依赖包！
+    
+    #删除依赖包
+    rpm -e php|mysql|程序名    然后查看输出，添加依赖包
+    rpm -e php|mysql|程序名 依赖包1 依赖包2 ...
+    
+5，安装wordpress
+    wget http://cn.wordpress.org/wordpress-3.9-zh_CN.tar.gz

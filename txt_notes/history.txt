@@ -1,0 +1,134 @@
+自编译并安装，是安装到/usr/local/include里面，这个路径需要指定，编译时并不会自动包含！所以，如果用到的头文件在这个路径，不在makefile里指定，就会导致undefine reference错误。
+apt-get install 或 make install时，是安装到/usr/include里面，这个路径是编译时自动包含的，因此不需要指定路径而能够编译。
+
+link.sh里面增加em_log.o DummyWin.o
+
+10     echo gpio > /sys/class/leds/buzzer-pwm/trigger
+ 11         echo 12 > /sys/class/leds/buzzer-pwm/gpio
+ 12         echo 250 > /sys/class/leds/buzzer-pwm/desired_brightness
+ 13         echo 1 > /sys/class/leds/buzzer-pwm/inverted
+ 14         system();
+ 15         
+ 16 ble_keyboard_sound() {
+ 17         echo none > /sys/class/leds/buzzer-pwm/trigger
+ 18 }
+
+
+
+udhcpc -i wlan0
+cd /usr/local/app/midea-smart/
+/usr/local/app/midea-smart/bin#
+ mknod /dev/video1 c 81 1
+ mknod /dev/video0 c 81 1
+ saMmapLoopback -u 1
+ 
+/usr/local/app/midea-smart/bin# ./connect_wifi.sh 
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+
+network={
+        ssid="EMA-Tech-1"
+        psk="EMATECHWLAN"
+        key_mgmt=WPA-PSK
+}
+root@stalkerboard-tty3:/usr/local/app/midea-smart/bin# ls
+8189es.ko        hostapd       midea-smart-service  wpa_supplicant.conf
+apHost.sh        hostapd.conf  wpa_cli
+connect_wifi.sh  midea-smart   wpa_supplicant
+
+ dmesg
+ 
+ 
+ root@stalkerboard-tty3:~# lsusb 
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+root@stalkerboard-tty3:~# 
+root@stalkerboard-tty3:~# dmesg
+
+[   10.895172] TCP established hash table entries: 16384 (order: 5, 131072 bytes)
+[   10.895629] TCP bind hash table entries: 16384 (order: 4, 65536 bytes)
+
+
+root@stalkerboard-tty3:~# ls /dev/
+block            loop7               ram0    tty10  tty32
+
+
+root@stalkerboard-tty3:~# uname -a
+Linux stalkerboard-tty3 2.6.32 #219 PREEMPT Tue Sep 9 17:46:30 CST 2014 armv7l GNU/Linux
+
+root@stalkerboard-tty3:~# saMmapLoopback -u 1
+Cannot open = /dev/video0 device
+Error in opening capture device for channel 0
+root@stalkerboard-tty3:~# 
+root@stalkerboard-tty3:~# cat /proc/devices 
+Character devices:
+  1 mem
+  4 /dev/vc/0
+  4 tty
+  4 ttyS
+  5 /dev/tty
+  5 /dev/console
+  5 /dev/ptmx
+
+root@stalkerboard-tty3:~# ls /dev/f
+/dev/fb    /dev/fb0   /dev/fb1   /dev/full
+
+
+root@stalkerboard-tty3:~# mknod /dev/video0 c 81 0
+root@stalkerboard-tty3:~# saMmapLoopback -u 1
+[  680.604248] ov5640_power_set: V4L2_POWER_ON
+[  680.608825] ov5640_power_set: Enabling camera power
+[  680.613922] ov5640_power_set: resetting camera
+[  680.618835] QVGA:0,VGA:1,SVGA:2,XGA:3,SXGA:4,UXGA:5,QXGA:6,QSXGA:7 isize=1
+[  682.871429] ov5640 configure end
+[  682.874938] ov5640_power_set: V4L2_POWER_STANDBY
+
+Capture: Opened Channel
+Capture[  682.880035] cjw:pixelformat:yuyv
+: Current Input: camera
+Capture: Input changed to: camera
+Capt[  682.888916] ov5640_power_set: V4L2_POWER_OFF
+ure: Capable of streaming
+Capture: Number of buffers request = 2
+Capture: Number of requested buffers = 2
+Capture: Init done successfully
+
+Cannot open = /dev/video1 device
+Error in opening display device
+root@stalkerboard-tty3:~# mknod /dev/video1 c 81 1
+root@stalkerboard-tty3:~# saMmapLoopback -u 1
+[  702.994842] ov5640_power_set: V4L2_POWER_ON
+[  702.999420] ov5640_power_set: Enabling camera power
+[  703.004516] ov5640_power_set: resetting camera
+[  703.009307] QVGA:0,VGA:1,SVGA:2,XGA:3,SXGA:4,UXGA:5,QXGA:6,QSXGA:7 isize=0
+[  703.143798] ov5640 configure end
+[  703.147064] ov5640_power_set: V4L2_POWER_STANDBY
+
+[  703.152252] cjw:pixelformat:yuyv
+Capture: Opened Channel
+Capture: Current Input: camera
+Capture: Input changed to: camera
+Capture: Capable of streaming
+Capture: Number of buffers request = 2
+Capture: Number of requested [  703.169952] QVGA:0,VGA:1,SVGA:2,XGA:3,SXGA:4,UXGA:5,QXGA:6,QSXGA:7 isize=0
+buffers = 2
+Capture: Init done successfully
+
+
+Display: Opened Channel
+Display: Capable of streaming
+Display: Number of buffers request = 2
+Display: Number of requested buffers = 3
+Display: Init done successfully
+
+Display: Stream on...
+[  703.308013] ov5640 configure end
+Capture: Stream on...
+[  712.827972] ov5640_power_set: V4L2_POWER_STANDBY
+[  712.832641] ov5640_power_set: V4L2_POWER_OFF
+
+root@stalkerboard-tty3:~# cd   
+
+root@stalkerboard-tty3:~/em/test# ./test_snapshot /dev/video
+
+df -h

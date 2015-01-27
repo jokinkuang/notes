@@ -1,0 +1,84 @@
+xdg-open    open the file with default software
+XXX &       open the software in a thread
+nautilus    open the Folder
+Ctrl+Z      bg the current task
+fg          fg the backgroud task 
+Ctrl+C      end the current task
+sudo su     login with the root account
+
+search:
+sudo find /usr/ -name openssl  //目录 名字
+
+
+service:
+/etc/init.d/XXX start/stop/restart
+service XXX start/stop/restart
+
+startup:
+/etc/lightdm/lightdm.conf    //登录界面设置
+/etc/fstab                      //开机自动mount
+
+user:
+/etc/passwd
+/etc/group
+/etc/shadow     
+
+mysql:
+/etc/mysql/my.cnf               //mysql服务监听配置
+
+apt：查看是apt-cache, 获取是apt-get，然后按tab查看他们的参数即很容易记得下面的命令。
+其中，dev是开发包，没有则是运行包
+apt-get install XXX                 //安装： 注，会自动安装依赖的服务！！
+apt-get -f install XXX             //修复安装
+apt-get install --reinstall XXX    //重装
+apt-get remove XXX                  //卸载： 注，会卸载依赖的服务！！
+apt-get remove --purge XXX          //卸载，并清除配置信息。注，同上，会卸载依赖的服务!!!
+
+apt-get source XXX              //获得包的源码
+apt-get build-dep XXX           //安装相关的编译环境
+
+
+apt-get update                      //更新源
+apt-get upgrade                     //升级可升级软件包，不是升级系统
+apt-get dist-upgrade                //升级系统
+apt-get dselect-upgrade             //使用dselect升级，大概时可以选择需要升级的东西。
+
+apt-get check                   //检查是否有损坏的依赖
+apt-get clean/autoclean        //清除无用的包
+
+
+apt-cache search XXX            //查找
+apt-cache show XXX              //显示包的信息
+apt-cache depends XXX           //显示包的依赖。依赖谁。
+apt-cache rdepends XXX          //显示包被哪些依赖。被依赖。
+
+//设置环境变量
+set ATTR = XXXX
+export ATTR
+env | grep "ATTR"               //验证
+
+//查看开发包的路径, --libs后，按tab即可查看可以列举的包
+pkg-config --cflags --libs libxml-2.0 
+pkg-config --cflags --libs gtk+-2.0
+一般而言，库一般是libXXX，个别是XXX。如libxml，libsdl等等。
+pkgconfig的列表在每个源目录里，即include目录同在的lib目录。
+个人的在/usr/include里面，对应/usr/lib/pkgconfig/目录
+系统的在/usr/local/include里面，对应/usr/local/lib/pkgconfig目录
+
+同时，安装了的包可能自备XXX-config命令，比如libsdl包会自动安装sdl-config命令。
+sdl-config --cflags 则可以查看libsdl的安装目录。                    一般在/usr/include下面。
+pkg-config --cflags --libs libxml-2.0 则可以查看libxml2的安装目录。 一般在/usr/include下面。
+
+另外，一个包可以有多个依赖，如libsdl-dev一般都需要sdl-image-dev,sdl-ttf-dev等开发包的依赖。
+而这些都需要独立安装。
+
+open-ssl的编程开发包不是openssl-dev，而是libssl-dev！！
+
+
+
+
+
+
+
+
+

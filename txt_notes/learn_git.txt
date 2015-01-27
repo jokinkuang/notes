@@ -1,0 +1,213 @@
+Learn Git
+
+一，配置文件。
+    1，版本库配置文件。一般是origin代表什么，各分支默认的远程服务和本地分支。
+        git config -e       //编辑
+        git config -l       //显示
+    2，用户全局配置。一般是用户名和email。
+        git config -e --global
+    3，系统配置文件。
+        git config -e --system
+    例子：
+    1，设置全局提交用户，global层配置文件。
+        git config --unset --global user.name
+        git config --unset --global user.email  //清空
+    2，显示。
+        git config user.name
+        git config user.email
+    3，修改。
+        git config --global user.name  XXX
+        git config --global user.email XXX
+
+二，操作。
+    1，再次提交而不产生新的log。
+        git commit --amend --allow-empty --reset-author
+        --amend:    对刚刚的提交进行修补，不会产生另外的新提交。
+        --allow-empty   允许空白提交，这里其实是一个空白提交。
+        --reset-author  同时修改提交信息，不加这个选项，提交只会修改提交ID成为当前新提交的提交ID。换言之，只是ID更改而无法更正提交用户！和日期！！
+    2，备份本次的工作成果。
+        git clone demo demo-step-1
+    3，日志。
+        git log         //查看提交日志
+        git log --stat  //每次提交的文件变更统计。
+        git log --pretty=oneline    //一行一个提交日志。
+        远程日志：  查看远程日志时，需要先fetch，fetch不会影响当前的master分支，合并后才成为master分支。
+        git log origin/master   //远程仓库的提交日志
+        git log kai/master      //远程仓库的提交日志
+        git log --filename    //查看某个文件的提交日志
+        git log --follow filename  //查看某个文件的包含rename操作的日志
+        
+    4，diff。
+        git diff        //工作区与提交任务区的比较。
+        git diff HEAD   //工作区和当前工作分支的比较。即工作区和版本库的比较。
+        git diff --cached/--staged   //提交任务区和版本库中的比较。
+        如何查看一个文件在不同版本下的改动？
+        1，使用gitk工具。需要安装：sudo apt-get install gitk
+           gitk filename
+        2，使用git blame filename
+           这个是输出每一行是谁修改的，也比较适合查看别人对自己的文件的修改。
+    5，status。
+        git status 
+        状态说明：
+        $ git status -s
+        M  welcome.txt  //位于第一列：版本库（staged）中的文件与处于中间状态-提交任务（提交暂存区，stage）中的文件相比有改动。
+                            //也意味着：工作区中的文件和暂存区的文件相同，换言之，工作区的文件已经提交到暂存区。
+
+         M welcome.txt  //位于第二列：工作区当前文件与处于中间状态-提交任务（提交暂存区，stage）中的文件相比有改动。
+                            //也意味着：版本库中的文件和提交暂存区的文件相同，换言之，上一次提交成功！
+
+        MM welcome.txt  //以上两者都是。
+
+        git status -s   //精简格式输出。    
+    6，提交。
+        提交前，必须先使用add将要提交的内容提交到暂存区。否则无法提交！
+        commit -a -m "commit"   //提交到暂存区，并提交到版本库。
+
+    7，reset。
+        git commit <file>     //暂存区的目录树写到版本库（对象库）,master分支会做相应更新，master最新指向的目录树是提交时暂存区的目录树！
+        注： git commit后面不加要提交的文件参数的话（如不加.或file）则必须先使用git add来将文件加到暂存区，即使该文件明明已经在加过到了git中；而如后面加文件参数，则可以直接提交成功，如果该文件曾经已经被加到git中。这个就是为什么老说commit不能提交成功非得先add的问题。其实没有那么复杂！
+
+        git reset HEAD  //暂存区的目录树被重写，被版本库里的master分支指向的目录树替换。工作区不受影响。
+        git rm --cached <file>  //直接从暂存区删除文件。工作区不受影响。
+        git checkout . /git checkout --<file> //用暂存区全部文件/指定文件替换工作区的文件。注：操作非常危险，会清除工作区中未提交到暂存区的改动！ 
+        git checkout HEAD ./git checkout HEAD <file> //用HEAD指向的master分支全部/部分文件替换 暂存区和工作区 中的文件。注：操作极具危险，会清除暂存区和工作区所有改动！！
+
+
+三，工作区，提交暂存区（stage），版本库（staged）。
+    工作区：                当前工作区的文件。
+    提交暂存区(stage)：     运行git add将文件提交到暂存区。
+    版本库(staged)：        成功提交到版本库后，版本库里的文件。
+
+四，./git/index文件的作用：
+    当文件发生改动时，./git/index文件的时间戳才会改变。
+    运行git status时，git先检查./git/index文件的时间戳是否发生改变，若无改变则无需比较，而若发生改变，git才读取里面的文件信息，并读取文件内容进行比较得到文件状态信息。
+    index也存储着暂存区的信息！！
+
+
+
+五，一般操作：
+   git push kai master //将本地的master同步到远程的kai，kai代表一个远程配置。
+   git clone git://git.kernel.org/pub/scm/git/git.git   //复制远程仓库到本地。此时本地还没有它的副本仓库。
+   
+六，远程操作：
+//git的远程依赖于ssh的连接。所以，ssh的设置会影响git的远程仓库操作。ssh的公钥私钥具体查看"SSH相关.txt"
+	1，查看所有远程仓库：		git remote -v
+	2, 查看当前远程仓库：     git remote show
+	3，上述命令执行后，效果和  git config -e 看到的配置文件一致。
+	4，增加远程仓库：		git remote add 远程别名 git仓库地址		// git remote add origin git@172.26.0.74:/personal/kai_kuang/ema-io-2.0
+	5，删除远程仓库：		git remote rm 远程别名     // git remote rm origin
+	6，删除或增加，都可以从 git config -e 查看到。
+
+	7，创建一个叫http的远程仓库：	git remote add http  git@172.26.0.74:/personal/kai_kuang/http			//以仓库名结束	
+	8，本地推送到远程仓库：		git push http master	// git push 远程别名 本地分支名
+		//远程仓库是空时，自动创建新的仓库
+		Initialized empty Git repository in /home/git/repositories/personal/kai_kuang/ibao_http.git/
+
+	9，本地获取远程仓库：			git clone git@172.26.0.74:/personal/kai_kuang/http			// 自动clone到本地成为master，且自动创建一个叫http的文件夹！
+						或		git clone http 不知道能否可行。
+	10，本地更新：				git fetch http
+						或		git fetch git@172.26.0.74:/personal/kai_kuang/http
+		git fetch 会在本地自动创建一个分支叫origin/master分支。而本地操作的分支叫master！
+		所以，一般而言，git fetch后，需要和本地分支合并，才能看到仓库上更新了哪些东西。git merge origin/master master合并分支。
+
+		//以上的所有操作，如果忽略本地分支，默认以当前操作的分支！！
+
+
+七，合并操作：
+	情景： A，B，C都对远程同一个文件进行了修改。此时，C修改了要同步到服务器，发现无法同步。提示：
+		! [rejected]        master -> master (non-fast-forward)
+	操作：
+	1，C备份好本地文件（最好，不过也不需要）。
+	2，C要先同步服务器的文件。git fetch.  (git pull操作太危险)
+	3，C修复A，B，C都修改了的文件，确定最后的版本，修改完后，还要进行一次git add。
+	4，此时，C不能进行单独文件的git commit XXX，只能直接执行git commit。然后git会自动提交一个合并Merge。
+	5，合并提交后，才能push到服务器。
+
+	//至于修改那个文件，除了手动修改外，不知到有没有更方便的方法。
+
+	//如果认为C的文件是最终的版本，可以试着使用 git push -f //强制提交。这在不确定的情况下很危险。
+
+八，分支操作：
+    1，创建一个新分支： git branch -b new
+    2, 现在在master下创建了新的文件，但是没有加入到git，此时创建新分支new，如果将新文件加入到new分支，并提交，那么，再次切换到master，master是看不到新增的文件的！只在切换到new分支才能看到新创建的文件。
+    3，切换分支： git checkout new
+    4，要更新远程文件到新的分支：
+        1，创建新分支： git branch -b new  //会自动切换到新分支
+        2，创建新的远程仓库： git remote add kai_remote git@XXXX
+        3，更新：   git fetch kai_remote
+        4，合并：   git merge new kai_remote/master     //合并本地new分支 和 远程更新到本地的分支kai_remote/master(fetch时默认创建的)
+                    git merge kai_remote/master    //合并kai_remote/master分支到当前分支。 
+        5，这时，新的分支new就是本地和远程的merge版本。
+        
+    5，查看远程目录： git remote -v
+
+九，合并no branch分支到主分支：
+    1，在no branch里提交。
+    2，切换到master分支，git会提示：
+        Warning: you are leaving 3 commits behind, not connected to
+        any of your branches:
+
+          d4959cd Merge branch 'dev' into HEAD
+          d5d639b change AirCondition to air_condition in test/send_request.pl add "power_on"
+          0af0b65 remove mode "disable"
+
+        If you want to keep them by creating a new branch, this may be a good time
+        to do so with:
+
+         git branch new_branch_name d4959cda0e1897e014e12977387c21f9fe2ed17a
+
+        Switched to branch 'dev'
+    3，在master分支上，合并no branch到master：
+        git merge d4959cd       //上面看到的最新的提交的hash code。
+=================================================================
+常用操作：
+    1，git fetch ： 将远程分支更新。git pull相当于 git fetch + git merge
+       git fetch origin   git fetch origin master【远程仓库】【远程分支】不能指定本地分支。
+       不等价于 git fetch origin master:master   (远程分支origin的master到本地的master,并且合并到master！！但是，如果不是fast forward，则该命令会执行失败！！)
+       建议一直使用git fetch origin,这样，会自动fetch到分支origin/master而不会执行合并。
+       
+    2，git merge origin/master： git merge [分支] 是将分支合并到当前分支。git merge的参数只有一个。
+       如果要将远程分支合并到本地dev分支，则先切换到dev分支，然后执行git merge origin/master
+    
+    3，冲突解决：
+        1，先git status查看冲突文件。
+        2，编辑冲突文件 <<<<< 是冲突开始     ======== 是两个冲突分隔   >>>>>是冲突结束。手动编辑，将======前面 或 后面保留，甚至可以再次编辑文件。然后make一下，看修改冲突后是否能正确编译。
+        3，冲突修复后，
+           使用git add将修复完的文件增加进来，以表示冲突解决。
+           使用git rm则是表示，这些冲突文件是不再需要的，是需要被delete的，如果只是文件内容冲突，一般不用git rm。git rm是将文件从版本里删除！！如果删除了，要找回来就得git checkout <hashcode> XXXfile 来将被删除的文件再次取出来。
+        4，git add将修复完的文件添加进来后，需要执行git commit -a来完成merge。
+        
+    4，如果从一个版本里提取一个文件。
+        git checkout <hash code> XXXfile  即能将该版本的XXXfile提取出来。
+        
+    5，提交本地某个分支到远程仓库的某个分支。
+        git push kai dev:dev    【远程仓库】【本地分支】：【远程分支】
+        git push kai master      等价于 git push kai master:[默认是远程的master]        
+
+    6，有时候，不能切换到另一个分支，因为有些没提交。这时，可以暂时将内容放入栈里面
+        git stash
+       取出来： git stash pop     列表： git stash list
+
+一般的分布式版本管理流程：
+远程主分支  ----------------------------------------------------
+本地主分支  -------  （当到达某个可用版本后，可以提交到远程主分支，然后创建一个dev分支）
+本地dev分支        ---------- （当本地dev分支也是一个可用的分支后，切换到主分支，将dev分支合并到主分支，然后才提交到远程主分支）
+
+当dev合并到主分支，并提交到远程主分支后：
+远程主分支  -----------------
+本地主分支  -----------------
+本地dev分支        ----------   （合并到主分支后，可以删除，也可以继续在dev里编辑）
+当dev分支合并到主分支后，可以删除dev分支。
+
+这样处理的目的是，保持本地主分支和远程主分支一致。保持本地与远程的稳定协调。一切与远程主分支的交互，都在master分支里。所以，在合并了本地分支后，得到另一个稳定版本后，提交到远程主分支前，可以先fetch远程分支，更新冲突，然后再提交。这样，就保持了本地主分支和远程主分支的一致性。
+
+
+
+
+
+
+
+
+
+
+    

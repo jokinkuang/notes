@@ -1,0 +1,153 @@
+gcc -E XXX.h
+g++ -E XXX.h    即可查看预处理后的结果。
+
+1，将宏的两个参数转成字符串，并夹着某个字符串合并：
+    #define BOARD_TYPE_STRING(start, end) #start"_"#end,      // c自动将两个相连的字符串合并 "a""_""b", 即 "a_b", 
+2，将宏的两个参数用某个字符串合并成一个变量名：
+    #define BOARD_TYPE(start, end) start##_##end,             // 结果是变量名 a_b
+
+
+2，当宏含有运算符时，应该加括号。
+
+
+
+
+
+
+
+
+eg
+/*
+ * File   : board_type.h
+ * Author : Kai Kuang <kai_kuang@ema-tech.com>
+ * Brief  : get the board type
+ */
+
+#ifndef _BOARD_TYPE_H_
+#define _BOARD_TYPE_H_
+
+#define BOARD_TYPE(start, end) start##_##end,
+#define BOARD_TYPE_STRING(start, end) #start"_"#end,
+
+#define BOARD_TYPE_START_STRING(start, end) #start,
+#define BOARD_TYPE_END_STRING(start, end) #end,
+
+/* sorted by alphabetical and numerical order */
+#define BOARD_TYPE_LIST(convert) \
+    convert(EGS3515, B1) \
+    convert(EGS3530, B1) \
+    convert(EGS37X , B1) \
+    convert(EGS3715, B1) \
+    convert(EGS3715, C1) \
+    convert(EGS3730, B1) \
+                         \
+    convert(EVM335X, A2) \
+    convert(EVM35X , A3) \
+    convert(EVM3530, B3) \
+                         \
+    convert(IPC335X, A3) \
+                         \
+    convert(SBC35X , A2) \
+    convert(SBC35X , B1) \
+    convert(SBC3530, A2) \
+    convert(SBC3530, B2) \
+    convert(SBC3730, B2) \
+                         \
+    convert(SOM335X, A1) \
+    convert(SOM35X , B2) \
+    convert(SOM3515, B2) \
+    convert(SOM3530, A3) \
+    convert(SOM3530, B2) \
+    convert(SOM37X , B1) \
+    convert(SOM37X , B1) \
+    convert(SOM3715, B1) \
+    convert(SOM3730, A1) \
+    convert(SOM3730, B1) 
+
+typedef enum {
+    BOARD_TYPE_LIST(BOARD_TYPE)
+    BOARD_TYPE_MAX,
+    BOARD_TYPE_INVALID = -1
+} board_type;
+
+static const char *_BOARD_TYPE_NAMES[] = {
+    BOARD_TYPE_LIST(BOARD_TYPE_STRING)
+};
+
+static const char *_BOARD_TYPE_START_STRING[] = {
+    BOARD_TYPE_LIST(BOARD_TYPE_START_STRING)
+};
+
+static const char *_BOARD_TYPE_END_STRING[] = {
+    BOARD_TYPE_LIST(BOARD_TYPE_END_STRING)
+};
+
+board_type get_board_type();
+board_type get_board_type_by_string(const char *name);
+const char * get_board_string_by_type(board_type type);
+const char * get_board_start_string_by_type(board_type type);
+const char * get_board_end_string_by_type(board_type type);
+
+#endif
+
+/*
+ * File   : board_type.c
+ * Author : Kai Kuang <kai_kuang@ema-tech.com>
+ * Brief  : implementation of board_type.h
+ */
+
+#include "board_type.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+#define CMDLINE "/proc/cmdline"
+#define EEPROM "/sys/bus/i2c/devices/2-0050/eeprom"
+
+board_type get_board_type_from_cmdline() {
+    FILE *fp = fopen(CMDLINE, "r");
+    if (! fp) {
+        printf("file %s not exist\n", CMDLINE); 
+        return BOARD_TYPE_INVALID;
+    }   
+        
+    return BOARD_TYPE_INVALID;
+}
+
+board_type get_board_type() {
+    /* open file */        
+    FILE *fp = fopen(CMDLINE, "r");
+    /* file not exist */    
+    if ( ! fp) 
+        printf("%s not exist", CMDLINE);
+    /* read data */    
+    /* search for board type string */
+    /* convert to board_type */
+    /* return */
+}
+
+board_type get_board_type_by_string(const char *name) {
+    int i;
+    for (i = 0; i < BOARD_TYPE_MAX; i++) {
+        if (strcasecmp(name, _BOARD_TYPE_NAMES[i]) == 0)  
+            return i;
+    }   
+}
+
+const char * get_board_string_by_type(board_type type) {
+    if (type < 0 || type >= BOARD_TYPE_MAX)
+        return NULL;
+    return _BOARD_TYPE_NAMES[type];
+}
+
+const char * get_board_start_string_by_type(board_type type) {
+    if (type < 0 || type >= BOARD_TYPE_MAX)
+        return NULL;
+    return _BOARD_TYPE_START_STRING[type];
+}
+
+const char * get_board_end_string_by_type(board_type type) {
+    if (type < 0 || type >= BOARD_TYPE_MAX)
+        return NULL;
+    return _BOARD_TYPE_END_STRING[type];
+}
+

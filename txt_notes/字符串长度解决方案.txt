@@ -1,0 +1,19 @@
+字符串长度的解决方案：
+1，使用snprintf进行字符串长度检测。再进行内存分配，然后才写入。
+2，估算长度，使用栈数组进行存储。
+3，
+
+char* get_error_message(char const *msg) {
+    size_t needed = snprintf(NULL, 0, "%s: %s (%d)", msg, strerror(errno), errno);
+    char  *buffer = malloc(needed);    
+    snprintf(buffer, needed, "%s: %s (%d)", msg, strerror(errno), errno);    
+    return buffer; 
+}
+
+size_t needed = snprintf(NULL,0,"%s: %s (%d)", msg, strerror(errno), errno);
+char*buffer = malloc(needed);    
+snprintf(buffer, needed,"%s: %s (%d)", msg, strerror(errno), errno);
+
+
+
+

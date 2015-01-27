@@ -1,0 +1,33 @@
+一些思考：
+1，函数内部的if else判断，是否可以放在函数外。
+   放在函数外，调用者麻烦，但速度相对快点。
+   放在函数内，调用者轻松，但速度相对慢点。
+   
+ @SuppressWarnings("serial")在Java中有什么作用？
+分类： 开发中的问题 2013-05-15 08:44 1083人阅读 评论(0) 收藏 举报
+Java编译器注释类Sun
+简介：java.lang.SuppressWarnings是J2SE 5.0中标准的Annotation之一。可以标注在类、字段、方法、参数、构造方法，以及局部变量上。
+作用：告诉编译器忽略指定的警告，不用在编译完成后出现警告信息。
+使用：
+@SuppressWarnings(“”)
+@SuppressWarnings({})
+@SuppressWarnings(value={})
+
+根据sun的官方文档描述：
+value - 将由编译器在注释的元素中取消显示的警告集。允许使用重复的名称。忽略第二个和后面出现的名称。出现未被识别的警告名不是 错误：编译器必须忽略无法识别的所有警告名。但如果某个注释包含未被识别的警告名，那么编译器可以随意发出一个警告。
+各编译器供应商应该将它们所支持的警告名连同注释类型一起记录。鼓励各供应商之间相互合作，确保在多个编译器中使用相同的名称。
+示例：
+· @SuppressWarnings("unchecked")
+告诉编译器忽略 unchecked 警告信息，如使用List，ArrayList等未进行参数化产生的警告信息。
+· @SuppressWarnings("serial")
+如果编译器出现这样的警告信息：The serializable class WmailCalendar does not declare a static final serialVersionUID field of type long
+使用这个注释将警告信息去掉。
+· @SuppressWarnings("deprecation")
+如果使用了使用@Deprecated注释的方法，编译器将出现警告信息。
+使用这个注释将警告信息去掉。
+· @SuppressWarnings("unchecked", "deprecation")
+告诉编译器同时忽略unchecked和deprecation的警告信息。
+· @SuppressWarnings(value={"unchecked", "deprecation"})
+等同于@SuppressWarnings("unchecked", "deprecation")
+@SuppressWarnings可以抑制一些能通过编译但是存在有可能运行异常的代码会发出警告，你确定代码运行时不会出现警告提示的情况下，可以使用这个注释。
+("serial") 是序列化警告，当实现了序列化接口的类上缺少serialVersionUID属性的定义时，会出现黄色警告。可以使用@SuppressWarnings将警告关闭

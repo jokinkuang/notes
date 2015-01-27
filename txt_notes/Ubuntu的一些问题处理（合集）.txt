@@ -1,0 +1,120 @@
+Ubuntu的一些问题处理：
+
+0，重装完系统，因为没有格式化的原因，导致启动时，引导分区无法被加载的问题。
+    重装后，efi和boot都无法被加载，这直接导致系统引导失败。
+    但是，系统的恢复模式仍旧是可以进入的。
+    总之，这个问题容易修复。
+    1，在/etc/fstab里面将加载boot和boot/efi的注释掉。
+    2，将boot和boot/efi分区里面的内容分别复制到/boot/目录 和 /boot/efi目录下。
+    以上操作后，系统的引导就不需要借助独立的boot分区和efi分区了，系统即能正常启动。
+    可能用到的命令: mount -U uuid /media/efi  //通过uuid加载分区，好从里面复制内容。
+    
+1，重装系统，只要不格式化home所在的分区即可。即使帐号名相同，也不会覆盖home目录下同名的文件夹！
+   重装系统，如果系统区不格式化也是可以的，只是安装过程会删除一些系统冲突文件夹，但同时，也会保留一些配置文件，比如，软件源配置文件等等。
+   重装系统后，ssh和对应的key还是可以生效的，MyEclipse也可以。但是一些驱动，vim，virtualbox，chromium等就要重新安装，但配置文件还是会在home目录下，因此只需安装主程序，配置不会丢失。
+
+2，重装后，vim每次进入出现Taglist: Exuberant ctags (http://ctags.sf.net) not found in PATH. Plugin is not loaded
+   这是因此没有安装ctags，到官网http://ctags.sf.net下载，
+   ./configure
+   make
+   make install   
+   安装即可消除。
+   
+3，显卡驱动安装失败。
+    先更新源或更新包： sudo apt-get update;  sudo apt-get upgrade;
+    然后再安装；
+    重启；
+   这主要时软件源的问题。 
+
+4，安装virtualbox时出现No suitable module for running kernel found ... failed!"
+    No suitable module for running kernel found ... failed
+    在用apt-get安装virtualbox 之后，在terminal里显示
+    Starting VirtualBox kernel modules
+    No suitable module for running kernel found ... failed!"
+
+    带来的直接结果就是，启动virtualbox的时候，点击start 一个虚拟机的时候，会出现
+    > "The VirtualBox Linux kernel driver (vboxdrv) is either not loaded or
+    > there is a permission problem with /dev/vboxdrv. Please reinstall the
+    > kernel module by executing
+    > '/etc/init.d/vboxdrv setup'
+    > as root. Users of Ubuntu, Fedora or Mandriva should install the DKMS
+    > package first. This package keeps track of Linux kernel changes and
+    > recompiles the vboxdrv kernel module if necessary."
+
+    Booting and installing to a VirtualBox Virtual Machine
+
+    The Steps.
+
+    1. create a harddiskimage for VirtualBox
+    2. boot the iso with VirtualBox
+    3. install on the image
+    Requirements
+    Recommended ram: 2 gig : Ideally 1024 MB for the guest and 1024 MB for the host. (it can be run on less, but do not expect to have good performance).
+
+    Hard disk space: While VirtualBox itself is very lean (a typical installation will only need about 30 MB of hard disk space), the virtual machines will require fairly huge files on disk to represent their own hard disk storage. So, to install MS Windows XP (TM), for example, you will need a file that will easily grow to several GB in size. To have aptosid in VirtualBox you need to allocate a 5 gig image plus a swap allocation.
+
+    Installation:
+    apt-get update
+    apt-get install virtualbox-ose-qt virtualbox-source dmakms module-assistant
+    Then prepare the module:
+
+    m-a prepare
+    m-a a-i virtualbox-source
+    Then activate Dynamic Module-Assistant Kernel Module Support for virtualbox, so that the next time the Linux kernel is updated a virtualbox module is prepared for it too, without manual intervention. To do that, add virtualbox-source to the /etc/default/dmakms configuration file.
+
+    mcedit /etc/default/dmakms
+    virtualbox-source
+    Then reboot the computer.
+
+    This is essential reading on dmakms
+
+    Installing aptosid to the virtual machine
+    Use virtualbox's wizard to create a new virtual machine for aptosid, then follow the instructions for a regular aptosid-installation.
+
+    VirtualBox has a comprehesive PDF Help, that you can download
+
+5，virtualbox安装完，出现usb问题导致无法开启虚拟机。
+VirtualBox下安装Linux系统。
+		安装过程没什么要说的，文件共享也无需插件包就能实现共享。
+	
+	屏幕自动适应显示：  安装完VBoxGuestAddition插件重启即可。但有时没反应，则在linux下设置一下显示，然后再切换到virtualbox，这时就能够识别到系统的分辨率了，然后适应。VBoxGuestAddition插件需要先用光盘加载，然后在虚拟机进入系统后安装。	
+    
+    Virtualbox识别USB设备
+
+    在默认情况下，Virtualbox是无法读取插到主机的U盘、u盾等USB设备的。但是，Virtualbox官方网站还是提供了解决办法。那就是安装Oracle_VM_VirtualBox_Extension_Pack-*.vbox-extpack，通过查看这个网页www.virtualbox.org/wiki/Downloads，我们就可以知道这个组件的功能为：
+
+    Oracle VM VirtualBox Extension Pack 
+    Support for USB 2.0 devices, VirtualBox RDP and PXE boot for Intel cards. See  for an introduction to this Extension Pack. The Extension Pack binaries are released under the .
+    简单地说就是提供了USB2.0设备支持，Virtualbox远程桌面协议、Intel PXE启动支持。
+    到此问题就简单得多了。
+    首先，到这www.virtualbox.org/wiki/Downloads下载对应Virtualbox版本Oracle VM VirtualBox Extension Pack。
+    1.下载好后就是这个软件。双击安装，在弹出的窗口中点击Install ，会出现这个窗口： (这一步无论是linux下面也是这样)
+    2.将右侧的滑条拉到底就会变成这样，点击“我同意”
+    3.然后就开始安装可直至出现successfuly安装成功。
+    4.此时，如果Virtualbox安装在Windows，即主机为Windows时，就Virtualbox成功支持了USB、PXE了。
+    但是对于安装在Linux里的Virtualbox，即主机为Linux时，此时还差一步，即把用户加到vboxusers组里。
+    A:在Ubuntu、Debian、Deepin、Linux Mint：
+    打开终端：sudo gedit /etc/group
+    找到这一行：vboxusers:x:126:
+    添加你的用户名，如你的用户名位kevin，则改成：vboxusers:x:126:kevin
+    然后保存退出。
+    B:在Redhat 、Fedora、Centos：
+    su -vi  /etc/group
+    找到这一行：vboxusers:x:126:
+    添加你的用户名，如你的用户名位kevin，则改成：vboxusers:x:126:kevin
+    然后保存退出。
+    上面也可以运行命令sudo usermod -a -G vboxusers kevin
+    保存修改后，重启计算机，打开终端，输入id看看用户次要组里是不是有了vboxusers呢？？
+    这样打开Virtualbox，启动虚拟系统，分配USB设备就行了。
+    
+6，gedit不能输入中文。
+    这个，随便弄弄就出来了，比如：
+    来回切换输入法。
+    重启gedit。
+    重启输入法。
+    升级: sudo apt-get upgrade
+    
+7，tty1 ~ tty6 黑屏，但tty7图形界面正常。
+    这个，通过进入恢复模式，然后继续启动，在启动过程先进入tty1，然后等待启动结束。这样，tty1～tty6是可以正常显示的，虽然会等待几秒。
+    所以，一般而言，如果图形界面没问题，字符终端就很少出现问题。
+    

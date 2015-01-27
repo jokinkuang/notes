@@ -1,0 +1,15 @@
+ typedef enum {
+      GET,
+      POST          //逗号可有可无
+ } HTTP_METHODS;
+
+int __do_request(HTTP_METHODS method);
+调用 __do_request(GET);
+
+枚举的成员，是全局字面值。 所以，多个枚举的成员名不能相同。
+
+
+
+
+
+

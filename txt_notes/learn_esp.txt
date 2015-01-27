@@ -1,0 +1,17 @@
+esp的结构
+1，客户端：
+    echo.client.c   esp_package.c   esp_transfer.c  
+2，单线程服务端：
+    esp_receptionist.c  
+    singlethread_echo_server.c
+3，多线程服务端：
+    esp_transfer.c
+    multithread_echo_server.c
+
+其中，单线程服务端使用的是select实现。使用的是esp_receptionist.c
+      多线程服务端使用的多线程监听文件描述符。使用的是esp_transfer.c
+
+单线程select和多线程的处理区别：
+    看实现的文件不同，就说明这两个实现的处理函数是不同的。
+    select据说是检测到内存已经有数据可读/可写才返回，换言之，select的处理只是单纯将内存中的数据复制到程序自身内存空间保存以备用。所以，select触发一次，则只能进行一次读/写。程序再读/写是获取不到数据的。
+    多线程则不同，每个线程处理自身的文件描述符，可以在线程内阻塞等待读/写。故多线程的环境下，可以使用while配合read/write进行多次读写。

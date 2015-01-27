@@ -1,0 +1,397 @@
+简明 Python 教程
+
+1，helloworld
+#!/usr/bin/python           //#!在Unix系统里，是告诉系统使用哪种解释器。 当然，你可以在命令行里使用某个解释器执行。
+# Filename: helloworld.py
+
+print 'helloworld'          //python的每一行前最好不要有空格或TAB.	
+
+2，让程序可以执行： 
+    1，脚本文件头要有#!指明程序解释器路径。
+    2，可以使用./XXX.py执行
+    3，可以chmod a+x ./XXX增加可执行属性，然后XXX执行即可，Unix系统会根据#!指明的解释器路径执行。
+    4，echo $PATH可以查看默认可执行程序的搜索目录。
+       PATH=$PATH:/home/ema/dir来将dir目录加入到可执行程序的搜索目录。
+
+3，基本类型： 4种
+    1，整数
+    2，长整数
+    3，浮点数
+    4，复数
+    
+4，字符串
+    1，''
+    2，""
+    3，''' 或 """     多行字符串，
+    4，转义符
+        出现在末尾的 \ 表示，下一行是续行，而不是真正意义的新行。（貌似python是行解释，解释性语言都会有这些限制）
+        如 'abc\
+            def'   等价于  'abcdef'
+    5，自然字符串 rR
+        r"abc\n" 就是输出 abc\n   字符串里的转义字符都无效。
+    6，Unicode字符串 uU
+        u"This is Unicode String" 就变成是Unicode的字符串。
+    7，字符串是不可改变的。
+    8，和c一样，相邻的字符串会被组合。
+        'Who' 'are' 'you' 会自动转换为 'Who are you'
+    9，一定要用自然字符串处理正则表达式！
+    
+    Python里没有字符。
+
+5，变量
+    1，大小写敏感
+    2，字母或下划线开头。不包含“-”
+    3，可以是字母，下划线和数字。不能含标点！“-”是标点。
+    
+    其实和C一样。
+
+6，变量使用
+   类型分为基本类型：数和字符串 和对象。
+   
+   Python里把所有用到的东西都叫对象。Python是极其面向对象的。
+   
+   Python里使用变量只需要给它赋一个值，不需要声明或定义变量类型。
+
+    如：
+    #!/usr/bin/python
+    # Filename: var.py
+    i = 10
+    print i
+    i += 1
+    print 'i is ', i
+    s = """abc"""
+    print s
+
+7，Python的逻辑行与物理行。
+    你可以注意到，上面的Python代码都没有语句分隔。
+   物理行： 看到的行。
+   逻辑行： Python看到的语句数。
+   
+   那为什么上面可行呢？ 因为Python假定每一个物理行就是逻辑行。即如果遇到一个物理行，则认为是一个逻辑行结束，也即一个语句。（Python也希望这样）
+   那么，我想一行有多个语句呢？或者多行只是一个语句呢？
+   1，一行有多个语句，可以使用分号。    i = 5; print i; （尽量不要用分号，而保证一行就是一个逻辑行，据说作者没看过分号！）
+   2，多行一个语句，行末使用 \ 。
+                s = "abc \
+                def"                //注，def前面的空格也算的！
+      仍旧说一句，只有语句实在太长了，才建议使用。
+   
+   如，比较奇葩的用法：     //用于发散思维
+        print \
+        'helloworld'
+
+8，缩进。   对Python来说，很重要。
+   Python根据每行行首的缩进来区分“语句块”
+
+   如：
+   i = 5
+   [空格]print i 是错误的。
+   
+   所以，缩进是很重要的。
+   不要混合使用制表符和空格来缩进，因为这在跨平台下难以正常工作。
+   建议： 使用单个制表符，两个空格 或 四个空格。 并且只用其中一种。
+   
+ 有了上面语句块基础后，可以了解控制语句了。
+       
+9，运算符和表达式
+    +   对字符串拼接有效     'a' + 'b' = 'ab'
+    *   可以用于字符串重复   'ab' * 3 = 'ababab'   
+    **  幂                 3**4 = 3*3*3*3
+    /   除，和C一样，       4/3 = 1;  4/3.0 = 1.3333333333
+    //  取整除，返回商的整数部分    4//3.0 = 1.0
+    %   求余                      8%3 = 2   -25.5%2.25=1.5
+    <   小于，可以任意连接       5 < x < 7
+    ==  等于，可以比较对象       
+   
+10，控制语句
+    if  for  while    没有switch！
+    
+    if XXX == XXX:
+        print ''
+        print ''   
+    elif XXX == XXX:
+        print ''
+        print ''
+    else:
+        print ''
+        print ''
+    
+    while running:
+        if XXX:
+            print ''
+        elif XXX:
+            print ''
+    else
+        print ''
+   
+    //while有一个配对的else，所以，缩进是用于确定语句块的。这个else与while同层，所以，else是与while配对。
+    //其实这个else是一定会被执行的，除非是死循环，所以，这个else其实也不必要。只是提醒，这个else的缩进不要脱离if，否则它就成为了while的语句块，导致逻辑错误！
+   
+    for i in range(1, 5):
+        print i
+    else:
+        print ''
+   
+    注： 
+    1，for也有一个else
+    2，range(1, 5)是1～4等价[1, 2, 3, 4]
+    3，range(1, 5, 2)是1～4之间步调是2，即等价[1, 3]
+    
+    循环同样可以使用break和continue
+    
+11，函数
+    def 函数名():
+        print ''
+        
+    函数名()   //call the function
+    
+    def 函数名(参数1，参数2，...)
+    
+    def printMax(a, b):
+        if a > b:
+            print 'MAX is ', a
+        else
+            print 'MAX is ', b
+            
+从函数和控制语句可以看到，Python里很少用到圆括号,甚至很少用到标点符号！ 最多的反而是冒号。 条件后面，函数定义后面。
+
+12，局部变量与全局变量
+    在函数内使用的变量叫局部变量（Python没有定义，所以直接说使用）
+    那么，在函数内使用全局变量怎么办？ 增加global说明。
+    def func():
+        global g_x
+        g_x = 12
+        print g_x
+
+
+13，可选参数的默认值 //必须是后面的可省略的参数。而且，后面不能再有参数而没有默认值。
+    def say(message, times = 1):
+        print message * times
+    say('hello')
+    say('hello', 5)
+    
+    重要：
+    只有在形参表末尾的那些参数可以有默认参数值，即你不能在声明函数形参的时候，先声明有默认值的形参而后声明没有默认值的形参。
+    这是因为赋给形参的值是根据位置而赋值的。例如，def func(a, b=5)是有效的，但是def func(a=5, b)是 无效 的。
+
+    之所以这样，是因为say('hello')，你不能让它的参数是第二个times的值，默认是从左往右排的，所以，右边的要全部是可选的有默认值的参数！
+
+14，关键参数。如果有多个参数，而你只想指定其中一部分参数的值，那么你可以通过命名来为这些参数赋值————这被称为关键参数。
+    1，不用关心参数顺序；2，只需给想要的参数赋值。
+    def func(a, b=5, c=10):
+        print 'a is', a, 'and b is', b, 'and c is', c
+    func(3, 7)
+    func(25, c=24)
+    func(c=25, a=100)
+
+15，return语句
+    def maximum(x, y):
+        if x > y
+            return x
+        else
+            return y
+    print maximum(2, 3)
+
+    注： 没有返回值的return语句等价于return None。None是python中表示没有任何东西的特殊类型。如，一个变量的值为None，表示它没有值。
+    除非提供自己的return语句，每个函数在结尾隐含返回return None。
+    pass    //python中表示一个空的语句块。
+    
+16，python有一个很奇妙的特性，为文档字符串。简称为docstrings。
+    DocStrings是一个重要的工具，由于它帮助你的程序文档更加简单易懂，你应该尽量使用它，你甚至可以在程序运行的时候，从函数恢复文档字符串！
+    def printMax(x, y):
+        '''Prints the maximum of two numbers.
+        
+        The two values must be integers.'''
+        x = int(x)  # convert to integers if possible
+        y = int(y)
+        if x > y:
+            print x, 'is maximum'
+        else
+            print y, 'is maximum'
+    printMax(3, 5)
+    print printMax.__doc__
+    
+    在函数的第一个逻辑行的字符串是这个函数的文档字符串，DocStrings也适用于模块和类。
+    文档字符串的惯例是多行字符串，首行大写，句号结尾。第二行空行，第三行开始是详细描述。（强烈建议文档字符串遵循这个惯例）。
+    python每一样东西都作为对象，所以，可以使用函数名.XXX访问函数内的任何一样东西，包括文档字符串。
+    print printMax.__doc__  # 输出printMax函数的文档字符串。
+    
+    help(printMax) 帮助函数，其实也是抓取printMax的__doc__属性输出而已！ 即help(XXX)里面是调用print XXX.__doc__
+    
+    编写函数时，编写函数的文档字符串是有意义的。
+    
+    函数被调用时，文档字符串是不会被打印出来！！只有你访问时才能读取: printMax.__doc__
+    
+模块
+1，模块文件名必须以.py为扩展名。
+2，模块需要导入。import XXX
+
+    import sys
+    print 'The command line arguments are:'
+    for i in sys.argv:
+        print i
+    print '\n\nThe PYTHONPATH is', sys.path, '\n'
+
+3，字节编译的.pyc文件
+
+    输入一个模块相对来说是一个比较费时的事情，所以Python做了一些技巧，以便使输入模块更加快一些。一种方法是创建 字节编译的文件 ，这些文件以.pyc作为扩展名。字节编译 的文件与Python变换程序的中间状态有关（是否还记得Python如何工作的介绍？）。当你在下次从别的程序输入这个模块的时候，.pyc文件是十分有用的——它会快得多，因为一部分输入模块所需的处理已经完成了。另外，这些字节编译的文件也是与平台无关的。所以，现在你知道了那些.pyc文件事实上是什么了。
+
+4，from..import语句
+
+    如果你想要直接输入argv变量到你的程序中（避免在每次使用它时打sys.），那么你可以使用from sys import argv语句。如果你想要输入所有sys模块使用的名字，那么你可以使用from sys import *语句。这对于所有模块都适用。一般说来，应该避免使用from..import而使用import语句，因为这样可以使你的程序更加易读，也可以避免名称的冲突
+
+5，模块的__name__
+
+    每个模块都有一个名称，在模块中可以通过语句来找出模块的名称。这在一个场合特别有用——就如前面所提到的，当一个模块被第一次输入的时候，这个模块的主块将被运行。假如我们只想在程序本身被使用的时候运行主块，而在它被别的模块输入的时候不运行主块，我们该怎么做呢？这可以通过模块的__name__属性完成。
+    #!/usr/bin/python
+    # Filename: using_name.py
+
+    if __name__ == '__main__':
+        print 'This program is being run by itself'
+    else:
+        print 'I am being imported from another module'
+        
+    每个Python模块都有它的__name__，如果它是'__main__'，这说明这个模块被用户单独运行，我们可以进行相应的恰当操作。
+
+6，创建你自己的模块
+
+    例8.3 如何创建你自己的模块
+
+    #!/usr/bin/python
+    # Filename: mymodule.py
+
+    def sayhi():
+        print 'Hi, this is mymodule speaking.'
+
+    version = '0.1'
+
+    # End of mymodule.py
+    //方法和属性都自然成为模块对象的方法和属性，都可以使用点来访问！
+    上面是一个 模块 的例子。你已经看到，它与我们普通的Python程序相比并没有什么特别之处。我们接下来将看看如何在我们别的Python程序中使用这个模块。
+
+    记住这个模块应该被放置在我们输入它的程序的同一个目录中，或者在sys.path所列目录之一。
+
+    #!/usr/bin/python
+    # Filename: mymodule_demo.py
+
+    import mymodule
+
+    mymodule.sayhi()
+    print 'Version', mymodule.version        
+
+    注意我们使用了相同的点号来使用模块的成员。Python很好地重用了相同的记号来，使我们这些Python程序员不需要不断地学习新的方法。
+
+    //用这个例子来说明上面的from..import的使用。
+    from..import
+
+    下面是一个使用from..import语法的版本。
+
+    #!/usr/bin/python
+    # Filename: mymodule_demo2.py
+
+    from mymodule import sayhi, version
+    # Alternative:
+    # from mymodule import *
+
+    sayhi()
+    print 'Version', version
+    //因为明确说明引用的模块的具体的方法和属性，所以可以不用模块名+点。但是缺点是，如果两个模块都具有sayhi，且都这样引入，就导致主调用处的sayhi无法确定而出错！这就是使用模块名能够避免命名冲突现象。
+    
+7，如何查看一个模块的属性，方法，变量等信息呢？
+    dir()函数    //查看当前模块，或当前模块里面某个标识符包含的属性/方法/变量等标识符。所以，如果当前模块不引入sys，dir(sys)是找不到任何信息的。
+    dir(sys)    //查看当前模块里面的sys标识符包含的所有标识符。
+    
+    你可以使用内建的dir函数来列出模块定义的标识符。标识符有函数、类和变量。
+    当你为dir()提供一个模块名的时候，它返回模块定义的名称列表。如果不提供参数，它返回当前模块中定义的名称列表。
+
+$ python
+>>> import sys              //导入sys模块，必须先导入。
+
+>>> dir(sys) # get list of attributes for sys module
+['__displayhook__', '__doc__', '__excepthook__', '__name__', '__stderr__',
+'__stdin__', '__stdout__', '_getframe', 'api_version', 'argv',
+'builtin_module_names', 'byteorder', 'call_tracing', 'callstats',
+'copyright', 'displayhook', 'exc_clear', 'exc_info', 'exc_type',
+'excepthook', 'exec_prefix', 'executable', 'exit', 'getcheckinterval',
+'getdefaultencoding', 'getdlopenflags', 'getfilesystemencoding',
+'getrecursionlimit', 'getrefcount', 'hexversion', 'maxint', 'maxunicode',
+'meta_path','modules', 'path', 'path_hooks', 'path_importer_cache',
+'platform', 'prefix', 'ps1', 'ps2', 'setcheckinterval', 'setdlopenflags',
+'setprofile', 'setrecursionlimit', 'settrace', 'stderr', 'stdin', 'stdout',
+'version', 'version_info', 'warnoptions']
+
+>>> dir() # get list of attributes for current module
+['__builtins__', '__doc__', '__name__', 'sys']   //当前模块因为上面的import sys，故当前模块的属性里有sys。
+
+>>>
+>>> a = 5 # create a new variable 'a'               //当前模块增加了一个变量a
+
+>>> dir()
+['__builtins__', '__doc__', '__name__', 'a', 'sys'] //查看时，可以发现当前模块又增加了一个a
+>>>
+
+>>> del a # delete/remove a name
+>>>
+>>> dir()
+['__builtins__', '__doc__', '__name__', 'sys']      //删除了a，则当前模块没有了a
+>>>
+
+>>> del sys                                         //删除了sys模块
+>>> dir ()
+['__builtins__', '__doc__', '__name__', '__package__']      //查看时，当前模块不再有sys
+>>>
+
+>>> dir (sys)                                       //因为当前模块没有引入sys模块，所以，找不到。
+>>> 出现错误！
+
+
+它如何工作
+
+首先，我们来看一下在输入的sys模块上使用dir。我们看到它包含一个庞大的属性列表。
+
+接下来，我们不给dir函数传递参数而使用它——默认地，它返回当前模块的属性列表。注意，输入的模块同样是列表的一部分。
+
+为了观察dir的作用，我们定义一个新的变量a并且给它赋一个值，然后检验dir，我们观察到在列表中增加了以上相同的值。我们使用del语句删除当前模块中的变量/属性，这个变化再一次反映在dir的输出中。
+
+关于del的一点注释——这个语句在运行后被用来 删除 一个变量/名称。在这个例子中，del a，你将无法再使用变量a——它就好像从来没有存在过一样。
+
+
+
+数据结构：
+1，列表。
+    1，像int=4一样，在赋值时，就自动转为对象（执行>>>python >>>help(int)会了解到更多信息）。shoplist = ['apple', ] //中括号，逗号。
+    2，列表的元素可以任意混合。
+    3，列表是可变的，字符串是不可变的。意思是方法会影响内容本身。
+    4，下标从0开始。
+#!/usr/bin/python
+# Filename: using_list.py
+
+# This is my shopping list
+shoplist = ['apple', 'mango', 'carrot', 'banana']
+
+print 'I have', len(shoplist),'items to purchase.'
+
+print 'These items are:', # Notice the comma at end of the line
+for item in shoplist:                       //for ... in 遍历对象
+    print item,                             //print语句的结尾使用了一个 逗号 来消除每个print语句自动打印的换行符。这样做有点难看，不过确实简单有效
+
+print '\nI also have to buy rice.'
+shoplist.append('rice')                     //append方法在列表中添加了一个项目
+print 'My shopping list is now', shoplist   //打印列表只需简单地把列表传递给print语句，我们可以得到一个整洁的输出。
+
+print 'I will sort my list now'
+shoplist.sort()                             //sort方法来对列表排序。需要理解的是，这个方法影响列表本身，而不是返回一个修改后的列表——这与字符串工作的方法不同。这就是我们所说的列表是 可变的 而字符串是 不可变的 。
+print 'Sorted shopping list is', shoplist
+
+print 'The first item I will buy is', shoplist[0]
+olditem = shoplist[0]
+del shoplist[0]                             //我们使用del语句来完成这个工作。这里，我们指出我们想要删除列表中的哪个项目，而del语句为我们从列表中删除它。我们指明我们想要删除列表中的第一个元素，因此我们使用del shoplist[0]（记住，Python从0开始计数）
+print 'I bought the', olditem
+print 'My shopping list is now', shoplist
+
+
+
+
+
+
+
+

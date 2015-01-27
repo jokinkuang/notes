@@ -1,0 +1,10 @@
+一直以为int与unsigned整型相加，unsigned整型会向上转换，但是这是错误的！
+int与unsigned int的相加，是自动转为unsigned int后再相加减！！
+
+下面的运算结果是>6
+void foo(void)
+{
+    unsigned int a = 6;
+    int b = -20;
+    (a+b > 6) ? puts("> 6") : puts("<= 6");
+} //int 自动转换为 unsigned int

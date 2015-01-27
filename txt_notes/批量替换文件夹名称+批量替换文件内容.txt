@@ -1,0 +1,5 @@
+1，替换文件夹名，即批量修改文件夹名。rename支持表达式。
+    rename 's/air_cond/aircond/g' *
+
+2，替换文本内容，有很多种方法，其中一种是使用sed。
+    sed -i "s/air_cond/aircond/g" *

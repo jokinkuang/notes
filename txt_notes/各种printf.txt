@@ -1,0 +1,67 @@
+asprintf 和 vasprintf  是GNU扩展。
+sprintf 和 vsprintf 是C和POSIX。
+
+sprintf 是输出内容到字符串中。
+        char day_str[3]; //只能存储2个字符。最后一个用于存储空字符。
+        scanf("%2d", &day);
+        sprintf(day_str, "%2d", day);
+        //sprintf会自动在day_str字符串尾部加入空字符，表结束。
+vsprintf 是输出
+asprintf 
+
+所有的区别都可以从函数定义可以看出：
+      #include <stdio.h>
+
+       int printf(const char *format, ...);
+       int fprintf(FILE *stream, const char *format, ...);
+       int sprintf(char *str, const char *format, ...);
+       int snprintf(char *str, size_t size, const char *format, ...);
+
+       #include <stdarg.h>
+
+       int vprintf(const char *format, va_list ap);
+       int vfprintf(FILE *stream, const char *format, va_list ap);
+       int vsprintf(char *str, const char *format, va_list ap);
+       int vsnprintf(char *str, size_t size, const char *format, va_list ap);
+
+v前缀是直接使用可变参数作为参数。
+没有v的参数自身是可变,可以通过调用v前缀的对应函数进行实现，如
+使用vsprintf实现sprintf：
+int sprintf (char * szBuffer, const char * szFormat, ...)
+{
+int     iReturn ;
+va_list pArgs ;
+va_start (pArgs, szFormat) ;
+iReturn = vsprintf (szBuffer, szFormat, pArgs) ;
+va_end (pArgs) ;
+return iReturn ;
+}
+
+following is cut from "man vsprintf"
+The functions in the printf() family produce output according to a for‐
+       mat as described below.  The functions  printf()  and  vprintf()  write
+       output  to stdout, the standard output stream; fprintf() and vfprintf()
+       write  output  to  the  given  output  stream;  sprintf(),  snprintf(),
+       vsprintf() and vsnprintf() write to the character string str.
+
+       The  functions  snprintf()  and  vsnprintf()  write  at most size bytes
+       (including the terminating null byte ('\0')) to str.
+
+       The functions vprintf(), vfprintf(), vsprintf(), vsnprintf() are equiv‐
+       alent  to  the  functions  printf(),  fprintf(), sprintf(), snprintf(),
+       respectively, except that they are called with a va_list instead  of  a
+       variable  number  of arguments.  These functions do not call the va_end
+       macro.  Because they invoke the va_arg macro, the value of ap is  unde‐
+       fined after the call.  See stdarg(3).
+
+       These  eight  functions  write the output under the control of a format
+       string that specifies how subsequent arguments (or  arguments  accessed
+       via the variable-length argument facilities of stdarg(3)) are converted
+       for output.
+
+       C99 and POSIX.1-2001 specify that the results are undefined if  a  call
+       to  sprintf(), snprintf(), vsprintf(), or vsnprintf() would cause copy‐
+       ing to take place between objects that overlap  (e.g.,  if  the  target
+       string  array and one of the supplied input arguments refer to the same
+       buffer).  See NOTES.
+

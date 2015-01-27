@@ -1,0 +1,27 @@
+      Example input string: 41 42 43
+         CRC16              = 0x4521
+         CRC16 (Modbus)     = 0x8550
+         CRC16 (Sick)       = 0xC3C1
+         CRC-CCITT (0x0000) = 0x3994
+         CRC-CCITT (0xffff) = 0xF508
+         CRC-CCITT (0x1d0f) = 0x2898
+         CRC-CCITT (Kermit) = 0xE359
+         CRC-DNP            = 0x5AD3
+         CRC32              = 0xA3830348
+
+   tst_crc -a
+
+      The program will prompt for an input string. All characters in the
+      input string are used for the CRC calculation, based on their ASCII
+      value.
+
+      Example input string: ABC
+         CRC16              = 0x4521
+         CRC16 (Modbus)     = 0x8550
+         CRC16 (Sick)       = 0xC3C1
+         CRC-CCITT (0x0000) = 0x3994
+         CRC-CCITT (0xffff) = 0xF508
+         CRC-CCITT (0x1d0f) = 0x2898
+         CRC-CCITT (Kermit) = 0xE359
+         CRC-DNP            = 0x5AD3
+         CRC32              = 0xA3830348

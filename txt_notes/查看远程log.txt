@@ -1,0 +1,3 @@
+查看远程提交的log
+git log kai/master
+git log origin/master ???

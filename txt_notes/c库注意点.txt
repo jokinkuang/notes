@@ -1,0 +1,1 @@
+1，strcmp()参数不能为NULL，会segmentation fault。但设计原则是，无论它支不支持NULL，都应该在调用前先判断。

@@ -1,0 +1,199 @@
+在Ubuntu下安装配置WordPress  
+
+一下操作时没有问题的，如果出现访问首页出现404等，而访问其他页却没有问题，则不是下面的步骤的问题！！是其他问题导致的。
+========================================================
+2009-04-19 14:55:06|  分类： Linux |  标签：wordpress  开源  apache  mysql  博客   |举报|字号 订阅
+什么是WordPress
+
+WordPress是一种使用PHP语言和MySQL数据库开发的开源、免费的Blog(博客,网志)引擎,用户可以在支持PHP和MySQL数据库的服务器上建立自己的Blog。WordPress是一个功能非常强大的博客系统,插件众多,易于扩充功能.安装和使用都非常方便。目前WordPress已经成为主流的Blog搭建平台...
+
+本文将使用Ubuntu 8.10为例,一步一步实现安装配置WordPress
+
+1.安装WordPress所需要的运行环境 (主要是Apache和MySQL,如果已经安装,下面部分步骤可以略过)
+
+1.1安装Apache和PHP模块
+
+$ sudo apt-get install apache2
+$ sudo apt-get install libapache2-mod-php5 php5
+
+1.2安装MySQL
+
+$ sudo apt-get install mysql-server-5.5 mysql-common mysql-admin  //mysql-admin在5.5已经没有了。其实安装server-5.5就会自动安装后面的2个依赖。
+
+1.3安装PHP的MySQL模块
+
+$ sudo apt-get install php5-mysql
+
+1.4配置MySQL
+
+$ mysql -u user mysql -p password   //其实是登录。因为是首次，所以mysql会创建用户名为root，密码要指定的帐号。
+
+初次登录没有root密码,直接回车就行
+以下2句创建WordPress需要的数据库和数据库用户
+
+mysql> CREATE DATABASE db_wordpress;
+mysql> GRANT ALL PRIVILEGES ON db_wordpress.* TO root@localhost IDENTIFIED BY "123456" WITH GRANT OPTION;
+//上面这句的意思是，修改db_wordpress所属的用户和密码。 root是用户名，“123456”是密码。登录mysql时，使用mysql --user=root, --password=123456
+  如果使用 *.* to root@localhost identified by "123456" 则表示，本机能够访问数据库的用户是root，密码是123456.
+  如果要远程某台电脑可以访问，则需要 *.* to root@111.111.111.111 identified by "1234" 则表示，111.111.111.111这个ip能够通过root和1234远程访问本数据库，并具有所有权限。
+  如果要远程任意一台电脑可以访问，则需要 *.* to root@"%" identified by "123456"
+// 这是最重要的一步： 如果远程还不能访问，则需要对mysql的配置进行修改。在sudo vim /etc/mysql/my.cnf，将bind-address  = 127.0.0.1注释掉。(下面有说明)
+
+2.启动Apache和MySQL
+
+$ sudo /etc/init.d/apache2 start                    //或者 sudo service apache2 start/stop/restart
+$ sudo /etc/init.d/mysql start                      //或者 sudo service mysql start/stop/restart
+
+3.安装WordPress
+
+$ wget -c http://wordpress.org/latest.tar.gz        //下载到当前目录
+$ tar -xvzf latest.tar.gz
+$ sudo cp -rf wordpress /var/www/                   //-r是递归，-f是不询问强制，即将当前目录的wordpress复制到apache2的项目目录。
+$ sudo chown -R www-data:www-data wordpress         //-r是所有，修改wordpress所属的用户和用户组。这表示，使wordpress属于www-data(用户):www-data（组）
+//第四步放在后面，是因为即使在当前目录修改了wordpress的拥有者，但是复制到root后，则变成了root用户拥有。除非复制时加点条件。
+
+4.配置WordPress
+
+$ cd /var/www/wordpress/
+$ sudo cp wp-config-sample.php wp-config.php
+$ sudo gedit wp-config.php
+
+找到如下类似3句并修改为自己的数据库连接字段
+
+define('DB_NAME', 'db_wordpress'); 
+define('DB_USER', 'user_wordpress'); 
+define('DB_PASSWORD', 'wordpress');
+
+5.完成安装WordPress
+
+打开Firefox输入http://localhost/wordpress/ 如果一切顺利就可以在网页界面下进行WordPress的初始化配置了!
+
+如果操作过程出现，Unable to create directory wp-content/uploads. Is its parent directory writable?
+则修改CHMOD wp-contents to 755 或 777
+
+注: 第一次访问时，最好不要使用http://localhost/wordpress/访问，因为wordpress会根据localhost这个ip字段来生成一些路径。如果使用localhost，则只能在本地访问，在其他机器就无法访问，因为一些资源的url显示为http://localhost/XXX。
+
+
+=========================================================
+MySQL相关
+1，首先熟悉一下mysql终端的命令：
+    登录： mysql -u用户名 -p密码
+    修改秘密： update user set password=password(”xueok654123″) where user=’root’;    
+    修改权限： grant 
+              创建一个可以从任何地方连接服务器的一个完全的超级用户，但是必须使用一个口令something做这个
+              grant all privileges on *.* to user@localhost identified by ’something’ with grant option;
+              增加新用户   格式：grant select on 数据库.* to 用户名@登录主机 identified by “密码”
+              其他自行百度。
+    切换数据库： use 数据库名
+    显示所有表： show tables;
+        
+    删除授权：
+    mysql> revoke all privileges on *.* from root@”%”;
+    mysql> delete from user where user=”root” and host=”%”;
+    mysql> flush privileges;
+    创建一个用户custom在特定客户端it363.com登录，可访问特定数据库fangchandb
+    mysql >grant select, insert, update, delete, create,drop on fangchandb.* to custom@ it363.com identified by ‘ passwd’
+
+2，这部分主要用于设置远程访问mysql而已。
+   你可以在windows下用navicat连接上，然后备份，修改等。
+
+3，如果一开始使用了localhost启动wordpress，那么，有两种方式来改进。
+    1，重装。
+    2，将数据库里的localhost字段替换成你的IP。给出可能用到的语句：
+        update wp_options set option_value='http://192.168.1.102/wordpress' where option_name='siteurl'; 
+        update wp_options set option_value='http://192.168.1.102/wordpress' where option_name='home'; 
+        update wp_postmeta set meta_value='http://172.26.10.47/wordpress' where meta_key='_menu_item_object';
+        还有其它。
+        有没有全局替换呢？貌似没有，只能通过脚本批量一个字段一个字段替换执行。
+    3，只是修改wp_options和wp_postmeta，然后登录更改一下主题。结果会更加好。
+    4，其实，或者可以通过wordpress的控制面板进行设置。在settings里面貌似有设置。
+    
+4，配置远程可以访问：
+    1，查看服务器mysql的运行：netstat -an | grep 3306
+        如果输出是tcp        0      0 127.0.0.1:3306          0.0.0.0:*
+        说明只是监听了本地，而没有监听外网。
+        修改mysql配置文件： sudo vim /etc/mysql/my.cnf 注释掉 bind-address  = 127.0.0.1 
+    2，授权
+        为了让访问mysql的客户端的用户有访问权限，我们可以通过如下方式为用户进行授权：
+        mysql> grant all on *.* to user_name@"%" identified by "user_password"; 上面的命令授予的用户权限可以访问mysql中的任意数据库(database)和表(table)        
+       其中：
+            如果使用 *.* to root@localhost identified by "123456" 则表示，本机能够访问数据库的用户是root，密码是123456.
+            如果要远程某台电脑可以访问，则需要 *.* to root@111.111.111.111 identified by "1234" 则表示，111.111.111.111这个ip能够通过root和1234远程访问本数据库，并具有所有权限。
+            如果要远程任意一台电脑可以访问，则需要 *.* to root@"%" identified by "123456"
+    
+    3，如果在windows下，可以用界面来完成配置。
+        
+============================================================
+远程SSH连接上linux服务器
+1，windows下可以选择使用putty工具来进行ssh远程连接。可以使用vim来在命令行直接修改服务器的文件。
+
+==============================================================
+在WordPress中使用PermaLink(永久链接)  
+
+注：不用下载PermaLink插件。
+
+2009-04-25 20:15:11|  分类： Linux |  标签：permalink  php  linux  wordpress   |举报|字号 订阅
+什么是PermaLink
+
+PermaLink是指向一个动态页面地址的静态链接，一般相对比较持久且不会变更。使用它可以输入目标的静态地址而不是动态地址来转到目标页面。举个例子来说，比如在WordPress写了一篇文章，标题为Using PermaLink，编号为123，那么在默认情况下的动态访问地址为http://xxx.com/wordpress/?p=123，而在启用PermaLink之后则可以以类似http://xxx.com/wordpress/2009/04/using-permalink/的静态地址来访问。
+
+因此，PermaLink实质上就是一种URL Rewrite技术，使用它可以优化对搜索引擎的检索。
+
+WordPress是一个PHP程序，如果使用Apache来架设它，则在使用PermaLink之前得启用Apache的mod_rewrite模块。该模块的作用是在WordPress的根目录下合理使用.htaccess文件来将动态地址模拟成静态地址。
+
+启用Apache的mod_rewrite模块
+
+$ sudo ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rewrite.load
+$ sudo gedit /etc/apache2/sites-enabled/000-default
+
+找到：
+
+    <Directory /var/www/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        allow from all
+    </Directory>
+
+修改为：
+    <Directory /var/www/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+上面的 /etc/apache2/sites-enabled/000-default 实则为 /etc/apache2/sites-available/default 的连接。
+
+由于WordPress中使用PermaLink是依赖于.htaccess文件，而上述文件中，“AllowwOverride None”则会完全忽略.htaccess文件中所定义的URL重写规则，自然也就不能生效了。
+
+启用mod_rewrite模块之后需要重启Apache服务
+
+$ sudo /etc/init.d/apache2 restart
+
+启用WordPress中的PermaLink，进入http://xxx.com/wordpress/wp-admin/，点击左边菜单Settings中的Permalink进入Permalink Settings界面，然后选好Common settings并点击Save changes,接着测试下是否已经生效。
+
+注： 不是插件，而是settings -》 Permalink 里面选择！
+
+
+===================================================
+中英文
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

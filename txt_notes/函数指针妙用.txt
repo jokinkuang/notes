@@ -1,0 +1,32 @@
+函数指针：
+1，函数指针的类型转换：
+typedef int (*EIO_ON_PACKAGE_RECV)(int fd, struct eio_package *pkg, void *user_data);
+
+EIO_ON_PACKAGE_RECV on_pkg_recevied; //函数指针类型
+
+2，函数指针：
+   返回值 (*函数指针变量名)(参数列表)
+   int        (*recv_data)(struct eio_receptionist *)
+   int *      (*recv_data)(struct eio_receptionist *)
+
+
+今天上www.armfans.net网站上浏览帖子的时候，看到一个很好玩且非常有学习意义的帖子，将的是c中函数指针的妙用，现将内容转录如下
+
+一小段精彩的 C语言，1和2实现相同的功能，欢迎大伙跟帖呵（特别感谢trio老师）
+
+//换言之，函数指针是void (*)(void),所以，下面的转换就是将一个地址值转化为函数指针的值。
+// void (*theUboot)(void)是指，函数指针变量为theUboot，指向的函数类型为void (*)(void)
+// 即匹配 void run(void);这样的函数。
+
+1  void (*theUboot)(void);
+     。。。。
+     theUboot = (void (*)(void))(0x30700000);
+     *theUboot();
+     。。。。。
+
+
+2  (*(void (*)(void))(0x30700000))();
+函数指针以前感觉很虚，没见过真的例子，这次见了一个，果然觉得很有妙用啊，刚开始看的不太懂，后经过trio的讲解，再结合上的高级c语言课，现在有点懂了，theUboot = (void (*)(void))(0x30700000)这句话是把0x30700000这个绝对地址转换为一个函数指针赋值给theUboot，然后再引用下theUboot所指向的函数，猛，这对只知道函数入口地址的特殊函数，像没有声明过的，或不在同一个工程的函数的调用应该很有用，学习下，呵呵
+
+
+

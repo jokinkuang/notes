@@ -1,0 +1,248 @@
+Socket编程和文件读写问题集
+
+网络的数据包，发送的时候，对方不读取也可以。发送主要是对方网卡的处理，将其存储在网络缓冲区。服务器程序即使block住，也是可以接受连接，并且接收数据。只不过，服务器程序因为block还不能读取在缓冲区里面的数据。但是，客户端发送是可以将数据都发送到服务器的！！所以，客户端的write一般是不会block住。
+block的读取方式则会真正block，因为网络缓冲区没有数据可读。
+
+
+1，读写函数。以读函数为例。
+    len = read(client_fd, buf->data + buf->offset, buf->unused_bytes);
+
+    注意点：
+    1，一般被包含在一个循环内，且读前，会有一个动态空间申请的操作。必须注意，
+        1，动态申请时，total_size的值要跟着递增
+        2，第三个参数的值必须小于未使用的空间的大小。
+        3，在关闭fd后才做清理buffer操作，否则，处理不当会出现释放了的buffer却进行了realloc来读取len==0的关闭信息！！
+        4，如果要留一个空间给'\0'，则只需在初始化total_size的时候为1，后面动态申请时直接用total_size + chunk_size即可。
+    2，第三个参数是指，本次读取要读取的字节数。这个数值不能随意，必须小于或等于buffer的长度！
+    3，第二个参数。写入指针。这个数值必须每次递增，否则会覆盖前面读取到的数据！
+    4，返回值。len < 0 表示出错。len == 0 表示远程写入端关闭，必须顺带关闭本地读取端。len最多为第三个参数的值大小。
+        len == 0是独立的一次读取。
+        发送一段数据然后关闭，读取到的是2个len值。第一次 len > 0 第二次 len == 0 并且是先后顺序的！
+        
+        所以，
+        1，如果接收到部分数据后，关闭fd，那么不可能再接收到len == 0.
+        2，如果接收到全部数据后，关闭fd，那么不可能再接收到len == 0.
+        3，如果不主动关闭fd，那么最后远程关闭时，一定会接收到len == 0. 此时，必须关闭参数1的fd，因为参数1的fd已经不具有意义了。
+        4，远程的fd和本地的read参数里的fd是不同的。远程的fd关闭后，本地read的len == 0。本地read的fd关闭后，远程的read的len == 0。
+            总之，read的len == 0，必须顺带关闭fd。
+    5，读函数里面的欲读取的长度，读到的长度不一定就是那么多，如果客户端在发送了256个字节后，sleep(2)，那么，服务器端只能读取到256个字节，剩下的等下一次读取。所以，可以用sleep来模拟网络拥挤的情况。
+    
+曾经导致的问题：
+    1，要读取的长度设置了一个固定值，但没有考虑buffer是否足够，结果导致内存泄漏。
+    2，读取过程，边分析获得的数据，如果包含需要的信息，就解析数据包，然后关闭fd，这样后是绝不会得到len==0的，而没有考虑到这一点。然而，如果对方只是发送了一点信息就关闭，那么因为没有分析到需要的信息，所以，会一直监听到len==0的，此时的len==0的处理才会被执行到。
+    3，读函数一般关系到动态内存申请，因为一般不知道数据包有多大。在动态申请的时候，忘记了buffer的total_size标记应该要随着realloc而递增，结果因为忘记了，导致realloc(total_size + 128)申请的内存一直固定，结果内存泄漏。
+    4，一般把内存申请放在read()之前，并包含在一个循环内，但是，当接收数据边解析的时候，解析成功了，然后就释放buffer，但是，没有关闭fd，结果远程fd关闭时，本地产生一个read，但因为buffer已经释放，read()前还有一次申请，就导致内存泄漏。所以，做法是，如果中途结束，释放了资源，就关闭fd。如果要到len==0时才释放资源，那么就不要提前关闭fd。
+    
+二，文件读写：
+    文件读写，一般有： open close is_open read/get write/set flush lseek
+             错误处理：ret=-1  文件尾： ret=0    其他：ret>0
+             
+                      fopen fclose is_open fread/get fwrite/set fflush fseek
+             错误处理：ferror(fp)>0   文件尾：feof(fp)>0  其他： ret>0
+    可见，带缓冲和不带缓冲，处理是不同的。
+    同样，读取时，要读取的字节一定要少于缓冲区大小。
+     
+2，文件读写。以读函数为例。
+    len = fread(buffer, size, n, fp);    
+    
+    注意点：
+    1，一般被包含在一个死循环内。而且，先判断文件是否到达末尾，再读。
+    2，先判断是否文件尾，再读取。因为最后一次读取有内容，但fp可能到达文件尾，因此放在读后面会导致最后一块没有被读取。
+    3，判断文件读取失败，不能通过返回值len == 0判断。必须通过ferror(fp)非0，此时可以通过errno来获得错误信息。
+        len == 0可能是，读取失败，读取n个size块却不够1个块，故返回值为0，而这不属于错误！
+    4，读取时，有两种方式，fread(buf, 1024, 1, fp) 和 fread(buf, 1, 1024, fp)，前者最多返回1，后者最多返回1024. 另外，可能有效率问题，不过操作系统内核有缓存优化，估计差不多。
+    5，如果在循环内，一般先判断feof(fp)，再读取，然后再判断ferror(fp). 因为读取后，到达文件尾，但这最后一次的读取仍旧有数据！
+    6，如果用fseek(fp, 0L, SEEK_END)跳到文件尾，立即调用feof(fp)是返回0的，表示不是文件尾。要判断feof，必须先进行一次读写，这样文件尾的标记位才被设置，然后才使用feof(fp)来判断文件是否结束。顺便说一下，feof(fp)非0表文件尾，ferror(fp)非0表错误。
+        //在这里，顺便说一下，fseek的效率问题，在arm上运行，fseek(fp, 32600L, SEEK_SET)比fseek(fp, -600L, SEEK_END)要慢real 0.040s，后者是0.347 （使用time command执行命令后查看差异）也即是说，差别并不大。但fseek操作却很耗时间！据说可能是因为缓存的问题。
+        //如何解决？ 不要使用带缓存的函数。将fseek转换为lseek(fileno(fp), 32600L, SEEK_SET),这样就不会因为缓存问题而导致速度下降。然后因为每次读取少量数据，所以最好使用带缓冲的fXXX函数。read无用户空间的缓存。有内核的.
+        //在arm板上，最影响时间的是IO操作，对于查找，匹配内存里的字符串，这样的操作即使数据量很大也相对比较快。0.018s左右。
+        详见： fseek等带缓冲函数对文件读取的影响.txt
+    7，读到的内容，立即打印出来，并不一定是读到的所有内容，因为文件内容可能是00 00这样的，被认为是字符串结束符。所以，如果要打印读到的内容，需要进行可打印字符过滤。
+    
+    
+    
+
+    printf(">> xml_data: \n");
+    while (1) {
+        /* every time clean the buffer */
+        memset(&_transation, 0, sizeof(_transation));
+
+        if (feof(fp)) {
+            printf(">> End of File\n");
+            break; 
+        }   
+
+        int len = fread(_transation.send_buf, MAX_SEND_BUF_SIZE, 1, fp);
+        _transation.send_buf[MAX_SEND_BUF_SIZE] = '\0';
+
+        if (ferror(fp)) {
+            perror("read file"); 
+            goto END;
+        }   
+
+        printf("%s", _transation.send_buf);
+        sleep(5);
+
+        int remain = MAX_SEND_BUF_SIZE;
+        char *offset = _transation.send_buf;
+        while (1) {
+            if (remain <= 0)
+                break;
+            len = write(server_fd, offset, remain);
+            if (len == 0) {
+                printf("server closed\n"); 
+                goto END;
+            }   
+            if (len < 0) {
+                perror("send to server fail"); 
+                goto END;
+            }   
+            offset += len;
+            remain -= len;
+        }   
+
+    }   
+    /* send successfully, now do read */
+    
+    
+    
+一，不知道数据包大小的接收方式： (没有使用协议表明数据包的大小，只有数据包的边界)
+    因为不知道数据包的长度，所以必须边接收别分析数据包是否完整，也就是说，将接收部分独立出来，需要先分析数据包，完整了再传递给处理函数。
+    
+    1，使用栈空间临时接收数据，然后复制到缓冲区。（先接收数据，后动态分配空间）
+     1.1 创建一个栈空间接收数据。
+     1.2 一次最多接收栈空间大小的数据。
+     1.3 每次接收完，将接收到的数据（不一定为栈空间大小）追加到接收缓冲区里。
+     1.4 每次接收完，分析内容是否已经合适，合适则处理数据包。
+     1.5 处理完数据包后，移除之前的已使用或不合法的数据。
+       
+     sdstring *recv_buf = (sdstring *)user_data;
+     char buf[CHUNK_BYTES];
+ 
+     int nread = read(client_fd, buf, CHUNK_BYTES);
+     if (nread < 0) {
+         Log::error("[RunServerTask] socket read fail");
+         perror("socket read fail");
+         goto fatal;
+     }
+     if (nread == 0) {
+         Log::error("[RunServerTask] xml contains no tag <package>, client has closed");
+         cout << "xml contains no tag <package>, client has closed" << endl;
+         goto close_client;
+     }
+ 
+     sdstring_catlen(recv_buf, buf, nread);
+ 
+     if (check_and_fix_package(recv_buf))
+         handle_package(recv_buf);
+ 
+     return true;    
+    
+   2，使用缓冲区直接接收数据。 （先动态分配空间，后接收数据）
+     1.1 动态增加分配CHUNK_BYTES大小的空间。
+     1.2 获得缓冲区内未使用的空间（一定大于或等于CHUNK_BYTES大小）。
+     1.3 用这段未使用的空间接收网络数据。
+     1.4 每次接收完，检测缓冲区的内容是否完整，完整则处理数据包。
+     1.5 移除缓冲区内已使用或头部不合法的数据。
+    
+    
+二，知道数据包大小的接收方式：（使用协议，协议头长度固定。协议头有说明数据包多大）
+    因为可以推算出数据包的长度，此时，可以先将数据包接收完全，才传递给处理函数。因为知道了长度，可以先动态分配内存再接收。
+    
+    static const int CHUNK_BYTES = 256;
+bool RunServerTask::on_recv_data(int client_fd, void *user_data) {
+    sdstring *recv_buf = (sdstring *)user_data;
+    char buf[CHUNK_BYTES];
+
+    int nread = read(client_fd, buf, CHUNK_BYTES);
+    if (nread < 0) {
+        Log::error("[RunServerTask] socket read fail");
+        goto fatal;
+    } 
+    if (nread == 0) {
+        Log::info("[RunServerTask] remote client has closed");
+        goto close_client;
+    }
+
+    /* append */
+    sdstring_catlen(recv_buf, buf, nread);
+
+    try_to_handle_package(recv_buf);
+    return true;
+
+    /* close client and keep listening */
+fatal:
+close_client:
+    Log::info("[RunServerTask] server close client");
+    Log::info("[RunServerTask] waiting for remote connections...");
+    sdstring_release(recv_buf);
+    close(client_fd);
+    reset_ui();
+    return false;
+}
+
+
+static bool receiving_data(int fd, void *user_data) {
+    struct transation *transation = (struct transation *)user_data;
+    sdstring *recv_buf = transation->recv_buf;
+
+    /* enlarge buffer */
+    sdstring_make_room_for(recv_buf, DEFAULT_CHUNK_BYTES);
+
+    int nread = read(fd, sdstring_cstr(recv_buf) + sdstring_len(recv_buf), sdstring_avail(recv_buf));
+    if (nread < 0) {
+        printf("transation:read: error occur [%s]\n", strerror(errno)); 
+        goto fetal;
+    }   
+    if (nread == 0) {
+        printf("transation:read: read close [fd was closed]\n"); 
+        goto close;
+    }   
+
+    /* update data len */
+    sdstring_increase_len(recv_buf, nread);
+    
+    transation->on_data_recv(recv_buf, transation->data_recv_user_data);
+    return true;
+
+fetal: 
+    transation->on_recv_error(transation->recv_error_user_data);
+    transation_release(transation);
+    return false;
+
+close:
+    transation->on_fd_closed(transation->fd_closed_user_data);
+    transation_release(transation);
+    return false;
+}
+
+    
+    
+=================================================================================
+    安全策略
+=================================================================================
+1，用户数据。
+    客户端发送时，对数据进行加密。服务端可以直接处理加密的数据，而不需要解密，这是密码策略。    
+
+2，客户端的合法性。
+    1,客户端的自我验证，检验客户端是否被授权，是否处于试用期。
+        客户端内嵌一段密文，自我解密，并验证。例如，将自身的md5加密存储在文件，然后程序运行时计算自身的md5和解密后的md5匹配。    
+    2,服务端对客户端的验证。
+        这个相对简单，客户端向服务端申请一个加密字符串，并按照解密协议解密数据并发送到服务端，如果成功，则认为客户端合法。
+        
+   客户端的合法性要求，主要在于，如果有人编写一个假的客户端，这个客户端只是连接到私人的服务器，用户输入密码时，这个假客户端只不过是将用户密码直接发送到私人服务器。对于用户而言，他看到的是“正常”的内容，因为用户根本无法得知数据有没有加密，也不知道服务器在哪，他只知道输入密码，确实显示登录成功。这种欺骗，在linux下无界面的程序更容易欺骗。但是，这点，第三方是无能为力的，只能靠用户自己判断。因为用户用的根本就是另一个程序了，无法保障。
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

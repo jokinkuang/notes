@@ -1,0 +1,717 @@
+shell有很多种，其中有
+查看/bin/sh指向，使用ls -l /bin/sh。
+dash： ubuntu12.04默认将/bin/sh指向dash，dash是bash的简版，功能不及bash。数组，正则的用法等都不同。
+bash： /bin/bash，一般shell教程默认使用bash。
+==========================================================
+效率：
+    调用shell脚本内置的命令比调用linux外部的命令要快。
+    比如，调用内置的正则匹配会比外部的快。
+==========================================================
+退出值   	            表示的意义
+  
+0	                    成功
+1 ~	63	                失败
+64	                    命令使用式不正确
+71	                    系统错误（如创建子进程失败）
+77	                    没有权限
+126	                    命令无法执行
+127	                    找不到命令
+  
+开发人员可以通过查看文件	sysexits.h	获取更多的标准退出值(在	
+Linux 系统上,该文件位于	/usr/include)。	
+
+1	通用错误	let "var1 = 1/0"	各种各样的错误都可能使用这个退出码, 比如"除0错误"
+2	shell内建命令使用错误(Bash文档上有说明)	 	很少看到, 通常情况下退出码都为1
+126	命令调用不能执行	 	程序或命令的权限是不可执行的
+127	"command not found"	 	估计是$PATH不对, 或者是拼写错误
+128	exit的参数错误	exit 3.14159	exit只能以整数作为参数, 范围是0 - 255(见脚注)
+128+n	信号"n"的致命错误	kill -9 脚本的$PPID	$? 返回137(128 + 9)
+130	用Control-C来结束脚本	 	Control-C是信号2的致命错误, (130 = 128 + 2, 见上边)
+255*	超出范围的退出状态	exit -1	exit命令只能够接受范围是0 - 255的整数作为参数
+========================================================
+1， 赋值=， 两边不能有空格。且，赋值是一个管道！ ret=`func`会等待里面的命令结束，且func里面的任何输出都不输出到终端，而是输出到变量ret里面！所以，要用echo $ret
+2， echo $ret 等价于 echo "$ret"
+3， 不是 $ret=`func` 而是 ret=`func` 对变量赋值，没有美元号，使用变量的值，才有。
+4， 等于=， 两边必须有空格。
+5， 判断[]，里面两边必须有空格。
+6， return时返回值，使用$?获取。ret=$(func)得到的是func里面的字符串输出，等价于ret=`func`，这不是返回值，而是输出内容。
+    直接if XXX 也是处理返回值的，但处理0/1是相反的，0表成功，进入条件。if ls;then echo true;fi 如果ls执行成功，返回0，那么触发条件。注：shell里面不是非0表示ture，0表示false。shell里面不能有if 0；then 或if 1；then。shell里面，只有true和false，成功和失败。
+7， 是否为空，仅包括空，不包含空格。
+8， 判断字符串是否为空，不能用 -n $str 而必须用 -n "$str" 或 if [ $str ]. $str估计不当字符串处理，而"$str"才确保是字符串。 $str当str为空时，更像是0值的行为。
+9， 输出不换行： echo -n 
+10，函数获取第一个参数$0,$1,$2....$， 
+11，参数个数： $#
+    遍历参数：testlength () { for p in "$@"; do echo ${#p};done }
+11，1>/dev/null 2>&1
+12，echo 要使用\n换行符，需要加 -e 。否则不能用。
+13，shell脚本自身的错误流： echo "error" 1>&2
+14，read line 读取一行，忽略行首行尾的空格和tab符号。
+15，shell的换行。 XXX \       // 分行符 \ 后面不能有空格！否则变成了空格的转义字符。\space 是空格的转义。
+16，模式匹配可以[[ XXX || XXX ]] 而普通的条件，只能[ XXX ] || [ XXX ]
+17，./${command} 也是可以的！！
+18，查找文件"./abc" 等价于 "abc"
+XXXXX
+==============================================================
+shell 函数 返回值 变量作用域 （非常重要）
+get_value() {
+    echo $1
+    return 1
+}
+
+调用shell只有两种方式：
+1， ret=`get_value XXX`  得到的是XXX，即get_value输出的内容重定向到ret变量。
+2， get_value XXX        忽略内容，即get_value输出的内容直接输出到屏幕。
+    
+没有 ret=get_value    //这样是指，将get_value字符串赋值给ret变量。
+
+那么，怎样得到函数的返回值呢？所有的调用方式都没有能够得到返回值啊？
+要得到函数的返回值，必须在函数执行完立即访问$?，$?就是上一个命令的执行的返回值。
+因此，获得shell函数的返回值，仅且仅有一种方式，就是$?
+
+注意：如果使用ret=`get_value XXX`; if [ ! "$ret" ]; then 的方式判断函数调用是否成功，需要注意，
+      不要在get_value调用过程，使用echo "XXX"，这样ret可能不为空，也即是说，一定会进入到条件里面！！
+      尤其是测试过程，会不自觉地在get_value的内部echo输出一些中间值来查看结果，这样就导致上面说的问题了。
+
+shell变量作用域。
+不在函数内部的，所有变量都是全局变量，在函数内能被修改。
+在函数内部的，看函数如何被调用：
+1，get_value XXX 这样调用的，get_value里面的变量从调用处开始，成为全局变量。
+2，`get_value XXX` 这样调用的，get_value里面的变量都是局部变量。只能访问，而不能修改外面的同名变量！！
+    如，a=10
+        get_value() {
+            echo $a     //局部变量a是全局变量的一个副本。
+            a=100       //修改的是局部变量a自身。
+        }
+可见，如果是get_value XXX这种调用，shell的处理可能是直接将函数体插入到调用处，所以，get_value里面的变量就都成为了全局变量。不过，可以强制用局部变量，就是加local标识，这样，即使用这种方式调用，变量仍旧是局部变量。
+而如果是`get_value XXX`这种调用，shell是通过创建子进程，创建管道来执行，因此，变量是相互独立互不影响。
+
+总结：（非常重要）
+    如果要shell函数通过全局变量传值出来，调用方式只有一种，就是get_value XXX。而不能用`get_value XXX`这种方式！！
+    稍微复杂的，就要利用文件描述符重定向实现，见下面exec 9<&0 <ur_file  。
+    
+另外，返回 $? 的问题。
+
+建议： 不要直接return $?
+因为： 如果用if [ "$?" -ne 0 ] return $?; 这样的问题是，第一次的$?确实是上一个命令的返回值，而且if可能会影响到$?的值，导致返回的$?并不是我们期望的上一个真正命令的返回值。比如 if [ "$?" -ne 0 ] echo "error"; return $?; 这个返回值会一直是0，因为它是echo命令的返回值，而不是我们想要的上一个命令。
+更重要的是，if可能会影响到$?，即使在if里立即返回，并不是我们期望的那个返回值，因为if本身也算是一句命令，所以，if里面的第一个$?永远是0！！！！
+
+做法： 
+1, 用变量存储上一个命令的返回值，而不是直接使用$?，除非仅使用一次！！ 像上面，在if，还在return里使用，则应该用变量存储！！！！
+2, 判断完后，return 后面不要跟$?，而用具体的数值，比如 return 1，return 2等等。
+
+==============================================================
+管道          ls XXX | awk "XXX"   ls的出错不是输出给awk，而是输出到shell终端。
+
+shell管道命令的出错信息不是通过管道传递给下一个命令，而是传递给调用的shell，
+因此，如果忽略出错，需要将出错信息屏蔽掉。
+ 
+
+
+
+==============================================================
+双引号的添加
+
+1，如果需要的是字符串，就应该加双引号，而且要毫不吝啬！
+    如： value="-n abc"; echo ${value} 和 echo "${value}"是不同的，前者是echo -n abc，后者是echo "-n abc".
+    如： 当value="" if [ ${value} = "abc" ]; then 会提示语法出错，必须加双引号为 "${value}"才行。
+2，如果在if里面，有特殊的符号，如判断文件，数值等符号，那么，可以加，可以不加双引号??
+    即使变量是数值，亦要加双引号。
+    如； value=""; if [ ${value} -eq 1 ]; then 会变成 if [ -eq 1 ]; then 于是提示-eq操作语法错误。
+        而如果是 if [ "${value}" -eq 1 ]; 则提示 不是数值。
+    假如， value=""; if [ ${value} -e 1]; then 会变成了 if [ -e 1 ] 那么语义就发生了改变，变成了判断文件是否存在了！
+    所以，无论if里判断的是什么，变量名都要加双引号！！！
+
+3， NETWORK_CONFIG_FILE=""   if [ ! -f ${NETWORK_CONFIG_FILE} ]; then 是不会进入到条件里面的！
+    只有加了双引号，才能进入条件。所以，必须加双引号！！
+
+结论：
+    无论变量是什么类型，在if里面，就应该加双引号。
+    在其他语句里，如果需要的是字符串，就一定要加双引号。否则，就不应该加双引号！！
+==============================================================
+特殊的变量
+$0:脚本名字。此变量包含地址，可以使用basename $0获得脚本名称。
+$1:第一个参数
+$2,$3,$4,$5,...一次类推。
+$# 传递到脚本的参数个数
+$* 以一个单字符串显示所有向脚本传递的参数，,以("$1 $2...") 
+$$ 脚本运行的ID号
+$! 后台运行的最后一个进程的ID号
+$@ 与$*相同，但是使用时加引号，并在引号中返回每个参数。("$1""$2"...) 
+$- 显示shell使用的当前选项。
+$? 显示最后命令的推出状况。0表示没有错误。
+========================================================
+模式匹配 和 正则匹配
+都包含在[[  XXX ]]内。
+
+==     在[ "$a" == "$b" ]内，与=等价
+       [[   ]]内是模式匹配:
+       如 [[ $a == z* ]]    # 如果$a以"z"开头(模式匹配)那么将为true 
+注：
+       模式匹配是没有双引号的。 [[ $a == "z*" ]] 等价于 [ $a = "z*" ] 即变成字符串而不是模式匹配。
+       
+       不过，可以赋值。
+       如 reg="z*" $a == $reg 亦可以。
+                 ${a} == ${reg} 亦可以
+                 ${a} == "${reg}" 不可以，后面变成了字符串，就是等于字符串。
+       从$reg可以作为z*这种行为，可以看出，shell里面的变量是没有类型的，且赋值为字符串也不一定表现成字符串行为。
+       首先，shell会直接访问${reg}变量，如果变量是字符串，而实际需要是数值，那么shell会尝试将其转换为数值。
+       同样，如果变量是数值，而实际调用时，需要的是字符串，那么shell会尝试将其转换为字符串。
+       而，在${reg}外添加一些符号，如"${reg}",`${reg}`，则表示，shell自动处理后，用户还自定义“强制”再处理一次，使其
+           强制转换为用户需要的类型。所以，"${reg}"结果肯定是字符串。`${reg}`则将${reg}作为命令调用。
+           单独的${reg}则由shell根据实际调用而自动转换，其展现出来的特性与使用的环境一致。[[ $a == ${reg} ]]则不是将
+           ${reg}看作字符串，而是看作一个模式匹配的格式。
+    模式匹配可以[[ XXX || XXX ]] 而普通条件只能 [ XXX ] || [ XXX ]
+具体，查看"shell的模式匹配和正则表达式.txt"
+=======================================================
+# main
+if [ ! "$1" ]; then
+    help
+    exit 0
+fi
+
+while [ "$1" ]; do 
+case "$1" in
+    -h|--help)
+           help; exit 0;; 
+    -i)    interface=$2; echo "-${interface}-"; echo "iab"; shift 0; shift 2; echo "def"; echo "1-$1-";;  //这里的shift 2会导致死循环，$1的值没有改变，仍旧为-i，只要不是shift 1，则会进入死循环！！。而使用shift 1; shift 1代替，或者，只要先使用一次shift 1，再使用shift n，则$1的值才会改变，因此才不会死循环！！
+    -m)    method=$2; 
+           if [ "${method}" = "dhcp" ]; then
+                break;
+           fi  
+           shift 2;; 
+    --ip)        address=$2; shift 2;; 
+    --netmask)   netmask=$2; shift 2;; 
+    -*)          echo "error: no such option $1. -h|--help for help." 1>&2; 
+                 exit 2;; 
+    *)     help; exit 0;; 
+esac
+done
+
+========================================================
+算术
+1，i=$i+1 或 i=($i+1)
+2，i=$i+"1"        这也行
+3，i=$(( $i+1 ))   两端必须有空格
+4，i=$[ $i+1 ]     两端可以无空格: i=$[$i+1]
+5，i=$[ i+1 ]      i可以没有$符号  i=$[i+1]
+
+=========================================================
+shell字符串比较、判断是否为数字  (    非常重要： 如果是字符串比较，请加""，可以避免很多问题，如果变量为空，没加""可能会导致错误    )
+ 
+二元比较操作符,比较变量或者比较数字.注意数字与字符串的区别.
+
+整数比较
+
+-eq       等于,如:if [ "$a" -eq "$b" ]
+-ne       不等于,如:if [ "$a" -ne "$b" ]
+-gt       大于,如:if [ "$a" -gt "$b" ]
+-ge       大于等于,如:if [ "$a" -ge "$b" ]
+-lt       小于,如:if [ "$a" -lt "$b" ]
+-le       小于等于,如:if [ "$a" -le "$b" ]
+<       小于(需要双括号),如:(("$a" < "$b"))
+<=       小于等于(需要双括号),如:(("$a" <= "$b"))
+>       大于(需要双括号),如:(("$a" > "$b"))
+>=       大于等于(需要双括号),如:(("$a" >= "$b"))
+
+字符串比较
+=       等于,如:if [ "$a" = "$b" ]
+==       等于,如:if [ "$a" == "$b" ],与=等价
+       注意:==的功能在[[]]和[]中的行为是不同的,如下:
+       1 [[ $a == z* ]]    # 如果$a以"z"开头(模式匹配)那么将为true 
+                // 模式匹配是没有双引号的。不过，可以赋值。如 reg="z*" $a == $reg 亦可以。
+                // ${a} == ${reg} 亦可以
+                // ${a} == "${reg}" 不可以，后面变成了字符串
+       2 [[ $a == "z*" ]] # 如果$a等于z*(字符匹配),那么结果为true
+       3
+       4 [ $a == z* ]      # File globbing 和word splitting将会发生
+       5 [ "$a" == "z*" ] # 如果$a等于z*(字符匹配),那么结果为true
+       一点解释,关于File globbing是一种关于文件的速记法,比如"*.c"就是,再如~也是.
+       但是file globbing并不是严格的正则表达式,虽然绝大多数情况下结构比较像.
+!=       不等于,如:if [ "$a" != "$b" ]
+       这个操作符将在[[]]结构中使用模式匹配.
+<       小于,在ASCII字母顺序下.如:
+       if [[ "$a" < "$b" ]]
+       if [ "$a" \< "$b" ]
+       注意:在[]结构中"<"需要被转义.
+>       大于,在ASCII字母顺序下.如:
+       if [[ "$a" > "$b" ]]
+       if [ "$a" \> "$b" ]
+       注意:在[]结构中">"需要被转义.
+       具体参考Example 26-11来查看这个操作符应用的例子.
+-z       字符串为"null".就是长度为0. 字符串为空
+-n       字符串不为"null"    字符串不为空。亦可以 if [ "${var}" ]
+       注意:
+       使用-n在[]结构中测试必须要用""把变量引起来.使用一个未被""的字符串来使用! -z
+       或者就是未用""引用的字符串本身,放到[]结构中。虽然一般情况下可
+       以工作,但这是不安全的.习惯于使用""来测试字符串是一种好习惯.
+ 
+awk '{print $2}' class.txt | grep '^[0-9.]' > res
+
+shell中if做比较
+
+比较两个字符串是否相等的办法是：
+
+    if [ "$test"x = "test"x ]; then
+
+    这里的关键有几点：
+
+    1 使用单个等号
+
+    2 注意到等号两边各有一个空格：这是unix shell的要求
+
+    3 注意到"$test"x最后的x，这是特意安排的，因为当$test为空的时候，上面的表达式就变成了x = testx，显然是不相等的。而如果没有这个x，表达式就会报错：[: =: unary operator expected
+
+    
+
+    二元比较操作符,比较变量或者比较数字.注意数字与字符串的区别.
+
+    整数比较
+
+    -eq 等于,如:if [ "$a" -eq "$b" ]
+
+    -ne 不等于,如:if [ "$a" -ne "$b" ]
+
+    -gt 大于,如:if [ "$a" -gt "$b" ]
+
+    -ge 大于等于,如:if [ "$a" -ge "$b" ]
+
+    -lt 小于,如:if [ "$a" -lt "$b" ]
+
+    -le 小于等于,如:if [ "$a" -le "$b" ]
+
+     大于(需要双括号),如:(("$a" > "$b"))
+
+    >= 大于等于(需要双括号),如:(("$a" >= "$b"))
+
+    小数据比较可使用AWK
+
+    字符串比较
+
+    = 等于,如:if [ "$a" = "$b" ]
+
+    == 等于,如:if [ "$a" == "$b" ],与=等价
+
+     注意:==的功能在[[]]和[]中的行为是不同的,如下:
+
+     1 [[ $a == z* ]] # 如果$a以"z"开头(模式匹配)那么将为true
+
+     2 [[ $a == "z*" ]] # 如果$a等于z*(字符匹配),那么结果为true
+
+     3
+
+     4 [ $a == z* ] # File globbing 和word splitting将会发生
+
+     5 [ "$a" == "z*" ] # 如果$a等于z*(字符匹配),那么结果为true
+
+     一点解释,关于File globbing是一种关于文件的速记法,比如"*.c"就是,再如~也是.
+
+     但是file globbing并不是严格的正则表达式,虽然绝大多数情况下结构比较像.
+
+    != 不等于,如:if [ "$a" != "$b" ]
+
+     这个操作符将在[[]]结构中使用模式匹配.
+
+     大于,在ASCII字母顺序下.如:
+
+     if [[ "$a" > "$b" ]]
+
+     if [ "$a" \> "$b" ]
+
+     注意:在[]结构中">"需要被转义.
+
+     具体参考Example 26-11来查看这个操作符应用的例子.
+
+    -z 字符串为"null".就是长度为0.
+
+    -n 字符串不为"null"
+
+     注意:
+
+     使用-n在[]结构中测试必须要用""把变量引起来.使用一个未被""的字符串来使用! -z
+
+     或者就是未用""引用的字符串本身,放到[]结构中。虽然一般情况下可
+
+     以工作,但这是不安全的.习惯于使用""来测试字符串是一种好习惯.
+
+if判断式
+if [ 条件判断一 ] && (||) [ 条件判断二 ]; then
+elif [ 条件判断三 ] && (||) [ 条件判断四 ]; then
+else
+   执行第三段內容程式
+fi
+
+例如：
+
+ 
+
+root@Bizbox:~# a=0
+root@Bizbox:~# b=0
+root@Bizbox:~# c=5         
+root@Bizbox:~# if [ $a = 0 -a $b = 0 ]&&[ $c != 0 ]; then
+> echo success
+> fi
+success
+if 使用的表达式
+
+Primary 意义
+[ -a 文件 ] 如果文件存在为真。
+[ -b 文件 ] 如果 文件 存在 而且 是一个 块-特殊 文件为真。
+[ -c 文件 ] 为真 如果 文件 存在 而且 是一个 字-特殊 文件。
+ 
+
+[ -d 文件 ] 为真 如果 文件 存在 而且 是一个 目录。
+[ -e 文件 ] 为真 如果 文件 存在。同-a，包含目录/设备/等文件。
+[ -f 文件 ] 为真 如果 文件 存在 而且 是一个 普通 文件。
+[ -g 文件 ] 为真 如果 文件 存在 而且 已经设置了他的 SGID 位。
+[ -h 文件 ] 为真 如果 文件 存在 而且 是一个 符号连接。
+[ -k 文件 ] 为真 如果 文件 存在 而且 他的粘住位已经设置。
+[ -p 文件 ] 为真 如果 文件 存在 而且 是一个 已经命名的管道 (F 如果O)。
+[ -r 文件 ] 为真 如果 文件 存在 而且 是可读的。
+[ -s 文件 ] 为真 如果 文件 存在 而且 比零字节大。
+[ -t FD ] 为真 如果 文件 文件描述符已经打开 而且 指向一个终端。
+[ -u 文件 ] 为真 如果 文件 存在 而且 已经设置了他的 SUID (set user ID)位。
+[ -w 文件 ] 为真 如果 文件 为真 如果 文件 存在 而且 是可写的。
+[ -x 文件 ] 为真 如果 文件 存在 而且 是可执行的。
+[ -O 文件 ] 为真 如果 文件 存在 而且 属于有效用户ID。
+[ -G 文件 ] 为真 如果 文件 存在 而且 属于有效组ID。
+[ -L 文件 ] 为真 如果 文件 存在 而且 是一个 符号连接。
+[ -N 文件 ] 为真 如果 文件 存在 而且 has been mod 如果ied since it was last read。
+[ -S 文件 ] 为真 如果 文件 存在 而且 是一个 socket。
+[ 文件1 -nt 文件2 ] 为真 如果 文件1 has been changed more recently than 文件2, or 如果
+文件1 存在 而且
+文件2 does not。
+[ 文件1 -ot 文件2 ] 为真 如果 文件1 比 文件2 旧, 或者 文件2 存在而且 文件1 不存在。
+[ 文件1 -ef 文件2 ] 为真 如果 文件1 而且 文件2 refer to the same device 而且 inode
+numbers。
+[ -o 选项名 ] 为真 如果 shell 选项 "选项名" 开启。
+[ -z STRING ] 为真 如果 "STRING"的长度是零。
+[ -n STRING ] 或者 [ STRING ] 为真 "STRING"的长度是非零值。
+[ STRING1 == STRING2 ] 如果两个字符串相等为真。 "=" may be used instead of "==" for
+strict POSIX compliance。
+[ STRING1 != STRING2 ] 为真 如果 两两个字符串不相等。
+[ STRING1 < STRING2 ] 为真 如果 "STRING1" sorts before "STRING2" lexicographically in the
+current locale。
+[ STRING1 > STRING2 ] 为真 如果 "STRING1" sorts after "STRING2" lexicographically in the
+current locale。
+[ ARG1 OP ARG2 ]
+"OP" 是 -eq, -ne, -lt, -le, -gt or -ge 其中一个。 These arithmetic binary operators
+return 为真 如果 "ARG1" is equal to, not equal to, less than, less than or equal to, greater
+than, or greater than or equal to "ARG2", respectively。 "ARG1" 而且 "ARG2" are
+integers。
+表达式可以借以下操作符组合起来, listed in decreasing order of precedence:
+操作符效果
+[ ! EXPR ] 如果EXPR 为假则为真。
+[ ( EXPR ) ] 返回EXPR 的值。 这样可以用来忽略正常的操作符优先级。
+ 
+
+[ 表达式1 -a 表达式2 ] 如果表达式1 而且表达式2 同时为真则为真 。
+[ 表达式1 -o 表达式2 ] 如果表达式1 或者表达式2 其中之一为真则为真。
+
+========================================================
+如果要比较一个字符串是否为空，不能用 -n $str 必须用 -n "$str"
+或者，直接作为if判断 if [ $str ]
+#!/bin/sh
+
+read a                          # a 输入空
+if [ -n $a ]; then 
+    echo -n "--"
+    echo -n "is not empty 1"    # 因为判断失效，进入，当a为空，$a 更像是 0，可能将其作为数值来处理。
+    echo -n "--"
+fi
+if [ -n "$a" ]; then 
+    echo -n "--"
+    echo -n "is not empty 2"    # 不能进入
+    echo -n "--"
+fi
+if [ $a ]; then 
+    echo -n "--"
+    echo -n "is not empty 3"    # 不能进入
+    echo -n "--"
+fi
+if [ "$a" ]; then
+    echo -n "--"
+    echo -n "is not empty 4"    # 不能进入
+    echo -n "--"
+fi
+if [ 0 ]; then
+    echo -n "--"
+    echo -n "is not empty 5"    # 能进入，据说是把0作为一个命令来执行，执行失败，所以返回1，继而进入if
+    echo -n "--"
+fi
+if [ -n 0 ]; then
+    echo -n "--"
+    echo -n "is not empty 6"    # 能进入，理由同上
+    echo -n "--"
+fi
+if [ -n -1 ]; then
+    echo -n "--"
+    echo -n "is not empty 7"    # 能进入，理由同上，数值执行，失败。
+    echo -n "--"
+fi
+if [ -n 1 ]; then
+    echo -n "--"
+    echo -n "is not empty 8"    # 能进入，理由同上
+    echo -n "--"
+fi
+
+当a=“ ”时，只有3不能进入，其他都进入了！！
+========================================================
+#!/bin/sh
+
+# FileName : get_board_type.sh
+# Author   : Kai Kuang <kai_kuang@ema-tech.com>
+# Brief    : get the board type
+
+get_board_type_from_cmdline() {
+    awk -F "[ =]" '{for (i=1; i<NF; i++) { if ($i=="boardmodel") print $(i+1)}}' /proc/cmdline
+}
+
+get_board_type_from_eeprom() {
+    hexdump -C /sys/bus/i2c/devices/2-0050/eeprom | awk -F "[.|]" '{for (i=2;i<NF;i++){if ($i != "") {print $(i+1)$(i+2); exit;}}}'
+}
+
+board_type=`get_board_type_from_cmdline`
+if [ -n "$board_type" ]; then 
+    echo $board_type
+    exit 0  
+fi
+
+# can not get from cmdline 
+
+board_type=`get_board_type_from_eeprom`
+if [ -n $board_type ]; then 
+    echo $board_type 
+    exit 0  
+fi
+
+# can not get from eeprom  
+
+echo "can not get board type"
+echo "    - not found in /proc/cmdline"
+echo "    - not found in /sys/bus/i2c/devices/2-0050/eeprom"
+exit 1
+=========================================================
+等价于  
+#!/bin/sh
+
+# FileName : get_board_type.sh
+# Author   : Kai Kuang <kai_kuang@ema-tech.com>
+# Brief    : get the board type
+
+get_board_type_from_cmdline() {
+    awk -F "[ =]" '{for (i=1; i<NF; i++) { if ($i=="boardmodel") print $(i+1)}}' /proc/cmdline
+#    echo `awk -F "[ =]" '{for (i=1; i<NF; i++) { if ($i=="boardmodel") print $(i+1)}}' /proc/cmdline`
+}
+
+get_board_type_from_eeprom() {
+    hexdump -C /sys/bus/i2c/devices/2-0050/eeprom | awk -F "[.|]" '{for (i=2;i<NF;i++){if ($i != "") {print $(i+1)$(i+2); exit;}}}'
+#    echo `hexdump -C /sys/bus/i2c/devices/2-0050/eeprom | awk -F "[.|]" '{for (i=2;i<NF;i++){if ($i != "") {print $(i+1)$(i+2); exit;}}}'`
+}
+
+board_type=`get_board_type_from_cmdline`
+if [ -n "$board_type" ]; then 
+    echo $board_type
+    exit 0  
+fi
+
+# can not get from cmdline 
+
+board_type=$(get_board_type_from_eeprom)
+if [ -n $board_type ]; then 
+    echo $board_type 
+    exit 0  
+fi
+
+# can not get from eeprom  
+
+echo "can not get board type"
+echo "    - not found in /proc/cmdline"
+echo "    - not found in /sys/bus/i2c/devices/2-0050/eeprom"
+exit 1
+
+
+
+=====================================================================
+#!/bin/sh
+set -e              # 若return返回值不为0，立即退出shell
+
+ip='182.92.0.199'
+port=80
+phone='15914330204'
+serial='123456abc'
+
+send_request() {
+    if [ $# -ne 2 ]; then
+        echo "send_request() expect 2 arguments!"
+        exit 1
+    fi
+
+    data=$1    
+    url=$2
+
+    curl -X POST -d "$data" "http://${ip}:${port}${url}"
+}
+
+send_rfid() {
+    rfid=$1
+    echo "send rfid: $rfid"
+    echo -n "response: "
+    send_request "phone=${phone}&serial=${serial}&rfid=${rfid}" '/guardian/api/gitone/1/rfid!acceptRfid.action'
+    echo "\n"
+}
+
+send_register() {
+    id="829efa53ea3943d8915b7d4254c96446"
+    echo "send register"
+    echo -n "response: "
+    send_request "id=${id}&serial=${serial}" "/guardian/api/gitone/1/register!deviceRegisterRequest.action"
+    echo "\n"
+}
+
+send_check_register() {
+    echo "send check register"
+    echo -n "response: "
+    send_request "phone=${phone}&serial=${serial}" "/guardian/api/gitone/1/register!status.action"
+    echo "\n"
+}
+
+send_get_versions() {
+    echo "send get versions"
+    echo -n "response: "
+    send_request "phone=${phone}&serial=${serial}" "/guardian/api/gitone/1/versions!query.action"
+    echo "\n"
+}
+
+send_get_contacts() {
+    echo "send get contacts (group $1)"
+    echo -n "response: "
+    send_request "phone=${phone}&serial=${serial}&group=$1" "/guardian/api/gitone/1/phones!query.action"
+    echo "\n"
+}
+
+send_message() {
+    msgid=$1
+    date=`date +'%Y-%m-%d %H:%M:%S'`
+    echo "send send message (id ${msgid})"
+    echo -n "response: "
+    send_request "phone=${phone}&serial=${serial}&messages=[{\"messageType\":\"${msgid}\",\"createTime\":\"${date}\"}]" "/guardian/api/gitone/1/messages!send.action"
+    echo ""
+}
+
+
+ARGS=`getopt -o i:p:P:h --long ip:,port:,phone:,help -- "$@"` 
+[ $? -ne 0 ] && usage
+eval set -- "${ARGS}" 
+
+while true ; do  
+    case "$1" in 
+        -i|--ip)    ip=$2; shift 2 ;;
+        -p|--port)  port=$2; shift 2 ;;
+        -P|--phone) phone=$2; shift 2 ;;
+        --)         shift; break ;;
+    esac
+done
+
+echo "IP:     $ip"
+echo "Port:   $port"
+echo "Phone:  $phone"
+echo "Serial: $serial"
+echo ""
+
+send_register
+send_check_register
+
+send_message 1
+send_message 2
+send_message 3
+
+send_get_versions
+send_get_contacts 1
+send_get_contacts 2
+send_get_contacts 3
+send_get_contacts 4
+
+send_rfid '1.12.23.34.45'
+send_rfid '2.12.23.34.45'
+send_rfid '1.12.23.34.45'
+
+=====================================================
+补充说明：set指令能设置所使用shell的执行方式，可依照不同的需求来做设置。
+ 
+参　　数：
+　-a 　标示已修改的变量，以供输出至环境变量。 
+　-b 　使被中止的后台程序立刻回报执行状态。 
+　-C 　转向所产生的文件无法覆盖已存在的文件。 
+　-d 　Shell预设会用杂凑表记忆使用过的指令，以加速指令的执行。使用-d参数可取消。 
+　-e 　若指令传回值不等于0，则立即退出shell。　　 
+　-f　 　取消使用通配符。 
+　-h 　自动记录函数的所在位置。 
+　-H Shell 　可利用"!"加<指令编号>的方式来执行history中记录的指令。 
+　-k 　指令所给的参数都会被视为此指令的环境变量。 
+　-l 　记录for循环的变量名称。 
+　-m 　使用监视模式。 
+　-n 　只读取指令，而不实际执行。 
+　-p 　启动优先顺序模式。 
+　-P 　启动-P参数后，执行指令时，会以实际的文件或目录来取代符号连接。 
+　-t 　执行完随后的指令，即退出shell。 
+　-u 　当执行时使用到未定义过的变量，则显示错误信息。 
+　-v 　显示shell所读取的输入值。 
+　-x 　执行指令后，会先显示该指令及所下的参数。 
+　+<参数> 　取消某个set曾启动的参数。
+=============================================================
+我写了一段代码如下：
+
+A="false"
+
+while read line
+do 
+
+       if [ ... ]
+             A="true"
+            echo $A  ---> 这步是没有问题，打出来正常，A为true
+            exit
+       fi
+.
+.
+.
+done
+
+echo $A ---> 这步就不对了，打出来A为false！也就是说前面的付值没有生效！！这是什么道理，如何叫它在退出那个循环后继续生效？
+
+好了，问题解决了，解决方法如下，我也是问别人的，根本不懂什么意思,不过上来写一下，为了方便大家
+
+UFP_DATA_INI="./etc/data.ini"
+UPDATE_USING="./tmp/update_using"
+A="space"
+
+   cat $UFP_DATA_INI | grep -w "`uname -srm`" > $UPDATE_USING
+   exec 9<&0 < $UPDATE_USING        #这里
+     while read i;                  #这里
+     do
+       A="UPDATEERR"
+       echo "A=$A"
+     done
+   exec 0<&9 9<&-                   #这里
+   echo "A=$A"
+# sh ./t1.sh
+A=UPDATEERR
+A=UPDATEERR
+对我有用[0] 丢个板砖[0] 引用 | 举报 | 管理
+wulei5482
+关注
+wulei5482
+wulei5482
+等级：Blank
+#9 得分：5 回复于： 2008-02-25 20:19:28
+在某些系统中，使用输入输出重定向从脚本获取数据或输出数据会有问题。因为输入输出重定向到循环在子shell中运行，所以会出现你的情况。
+解决方法：
+exec 9<&0 <ur_file             
+while ... ;do ... ;done
+exec <&9
+
+这里的9只是文件描述符，除了0标准输入，1标准输出，2标准错误不能乱用，3-9可以随便用。
+================================================================
+http://blog.sina.com.cn/s/blog_6151984a0100ekl6.html
+http://wenku.baidu.com/link?url=MgwuPmYC2FwMITxNiX6EzXiS2f7XsgN7H9VXzvzqwsZcxW6i8vd8YlEPRBj-y8ABsGxZZtcTSHs7G9RoPvOMR--gPXgigtxwyu5QZe5p4uS
+Shell脚本编程详解-吐血共享
+http://www.cnblogs.com/bugY/archive/2012/03/28/2420833.html

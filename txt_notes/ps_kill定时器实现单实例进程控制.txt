@@ -1,0 +1,97 @@
+ps_kill定时器实现单实例进程控制:
+思路： 
+1，1个定时器。使用计数来计算监视时间。
+2，usleep/sleep。使用计数来计算监视时间或定时器作为监视时间。
+3，两个定时器。一个用于监视，一个用于计算监视时间。
+
+PS:
+1，awk的匹配：
+ema@ema-TA75M:~/test$ ps -ef | grep -w a_process 		//匹配完整一个单词
+ema      12533  3742  0 11:39 pts/6    00:00:00 ./a_process
+ema      19742  3852  0 18:09 pts/8    00:00:00 grep --color=auto -w a_process				//使用grep命令总会多出这个grep自身。需要过滤掉。
+第一列    第二列 第三列 第四列 第五列 。。。（每一列以空格隔开）
+
+ema@ema-TA75M:~/test$ ps -ef | grep -w a_process | awk '$8!~/^grep/ {print $8" "$1}'		//总会多出一个grep，需要去掉。表示，第8列不等于grep开头。
+./a_process ema
+
+
+例子1：
+使用1个定时器和计数实现的监视：
+#include <stdio.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <string.h>
+#include <time.h>
+#include <stdlib.h>
+
+static unsigned int count = 0;
+static struct itimerval oldtv;
+static char ps_string[128] = {0};
+
+void signal_handler(int m)
+{
+    FILE *fp = popen(ps_string, "r");//打开管道，执行shell 命令
+    FILE *kill_fp;
+    char buffer[10] = {0};
+    char kill_string[25] = {0};
+    int loop_time = 0;
+    //printf("checking\n");
+    while (NULL != fgets(buffer, 10, fp)) //逐行读取执行结果并打印
+    {
+        //printf("Found PID:  %s", buffer);
+        if (loop_time > 0) {
+            /* Kill */ 
+            kill_string[0] = '\0';
+            strcat(kill_string, "kill -9 ");
+            strcat(kill_string, buffer); 
+            printf(" - Found Another %s", kill_string);
+            kill_fp = popen(kill_string, "r");
+            pclose(kill_fp);
+        }
+        loop_time += 1;
+    }
+    pclose(fp); //关闭返回的文件指针，注意不是用fclose噢
+
+    count++;
+}
+
+void set_timer(int interval_time)
+{
+    struct itimerval itv;
+    itv.it_interval.tv_sec = interval_time / 1000;
+    itv.it_interval.tv_usec = interval_time % 1000 * 1000;
+    itv.it_value.tv_sec = interval_time / 1000;
+    itv.it_value.tv_usec = interval_time % 1000 * 1000;
+    setitimer(ITIMER_REAL, &itv, &oldtv);
+}
+
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("usage: %s <process name> <time(s)> <interval time(ms)>\n", argv[0]); 
+        exit(1);
+    }
+    unsigned long monitor_time = atoi(argv[2]);
+    unsigned long interval_time = atoi(argv[3]);
+    if (monitor_time <= 0 || interval_time <= 0) {
+        printf("unavailable time\n"); 
+        exit(1);
+    }
+    //printf("count %ld\n", monitor_time * 1000 / interval_time);
+    strcat(ps_string, "ps -e | grep -w ");
+    strcat(ps_string, argv[1]);
+    strcat(ps_string, " | awk \'{print $1}\'");
+    printf("%s\n", ps_string);
+
+    /* Run First Time */
+    signal_handler(0);
+    signal(SIGALRM, signal_handler);
+    set_timer(interval_time);
+    while(count < monitor_time * 1000 / interval_time);
+
+    return 0;
+}
+
+例子2
+使用usleep实现的监视：
+

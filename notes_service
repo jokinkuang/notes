@@ -1,0 +1,30 @@
+#!/bin/sh
+start() {
+    echo "start"
+}
+
+stop() {
+    echo "stop"
+}
+
+restart() {
+    echo "restart"
+}
+
+dir=`dirname $0`
+cd ${dir}
+ls
+echo "====="
+cd / ; ls
+echo "====="
+
+ls
+if [ x"$1" = x"start" ]; then
+    start
+elif [ x"$1" = x"stop" ]; then
+    stop
+elif [ x"$1" = x"restart" ]; then
+    restart
+else
+    echo "usage: $0 [start|stop|restart]"
+fi

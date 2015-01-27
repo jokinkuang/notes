@@ -1,0 +1,171 @@
+Ubuntu 12.04 安装 MyEclipse10.6
+网址：
+	http://www.lihuoqing.cn/code/689.html
+	http://www.lihuoqing.cn/code/670.html
+
+//////////////先安装JDK1.7///////////////////////////////
+Ubuntu 12.10 配置JDK／chrome jre环境完全教程
+
+2012 十一 02共20条评论UBUNTU, 编程工具
+在我的印象中，Linux适合作为服务器，像Windows这种长着一张大众脸，又倍受广大人民的亲睐，走大众市场搞”基层”建筑比较合适。起初抱着试玩的心态装上了Ubuntu,可玩了两天倒发现Ubuntu桌面版比Win8更有趣，那些意想不到的东东更让人心潮澎湃，用了好多软件真正能体会到自由共享的倡导，开源无广告的趣味，总体感受我也说不清，一个字:”帅”，两个字:”帅气”。现在装了一个win8，一个Ubuntu 12.10 ，但基本不用Win8.   下面记录关于java的两个配置过程及AlwaysOnPC的使用：
+
+一.安装JDK*.tar.gz
+
+到Oracle官网下在JDK：http://www.oracle.com/technetwork/java/javase/downloads/index.html，因为我的系统是AMD64位，所以下载了目前64位最新版jdk-7u9-linux-x64.tar.gz。
+把下载的jdk-7u9-linux-x64.tar.gz移到安装目录，我直接放在／usr目录下。
+切换到／usr目录
+cd /usr
+解压jdk :  解压到的目录可能是安装目录！！
+
+sudo tar -zxvf jdk-7u9-linux-x64.tar.gz
+OK,接下来配置环境变量：
+sudo gedit /etc/profile
+在/etc/prifile文件后面添加(提示：这里JDK的路径改为你自己的安装路径):
+export JAVA_HOME=/usr/jdk1.7.0_09
+export JRE_HOME=/usr/jdk1.7.0_09/jre
+export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
+export CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib
+使刚才修改的/etc/profile文件立刻生效
+. /etc/profile
+修改系统默认JDK，并使之立马生效（提示：改为自己的路径哦, 如果要装myeclipse的话这一步是必须得，否则会出错哦）:
+sudo update-alternatives --install "/usr/bin/java" "java" "/usr/jdk1.7.0_09/bin/java" 300
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/jdk1.7.0_09/bin/javac" 300
+sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/jdk1.7.0_09/bin/javaws" 300
+sudo update-alternatives --config java
+sudo update-alternatives --config javac
+sudo update-alternatives --config javaws
+OK,操作完毕，用java -version查看效果，如果是刚才咱安装的那个JDK，就表示。。。你懂得！
+jdk_1.7.0.09.tar.gz配置成功！
+jdk_1.7.0.09.tar.gz配置成功！
+Java运行命令小提示：
+java -jar *.jar //运行已经编译的.jar文件
+javac *.java    //编译.java文件
+javaws *.jnlp   //运行.jnlp文件
+二.配置Google Chrome浏览器Java运行环境
+
+一般情况下，安装JDK了就带jre运行环境，如果还没jre环境呢，赶紧照上面装个吧！
+打开终端，切换到管理员root身份
+sudo -s
+在Google Chrome安装目录（默认 /opt/google/chrome）创建plugins文件夹
+mkdir -p /opt/google/chrome/plugins
+切换到plugins：
+cd /opt/google/chrome/plugins
+导入jre插件链接(找到自己的libnpjp2.so路径)：
+ln -s /usr/jdk1.7.0_09/jre/lib/amd64/libnpjp2.so
+浏览器输入：chrome://plugins/，选中”始终允许”。(根据自己的需要)
+此时此刻，浏览器的Java运行环境已经配置完毕，重启浏览器，去验证一下：http://java.com/en/download/testjava.jsp，看我的检测结果：
+Chrome浏览器成功安装Java plugin浏览器Java环境
+Chrome浏览器成功安装Java plugin浏览器Java环境
+ 三.AlwaysOnPC 
+
+可以看作前面两个步骤是为AlwaysOnPC的运行搭建环境，今天正好测试了下AlwaysOnPC，把过程记录下来。
+首先AlwaysOnPC是肯定需要Java的支持的，所以必须配置浏览器jre的插件支持。
+
+当我们点击“Connect to my AlwaysOnPC”，浏览器会自动验证是否安装jre环境，如果正常就会下载startAlwaysOnPC.jnlp文件，Ubutnu中在终端用javaws 命令运行该文件，就可以正常打开远程客户端连接到AlwaysOnPC了。关于AlwaysOnPC，这里不详解，有兴趣的可以百度／Google一下.
+
+///////////////////////再安装MyEclipse/////////////////////////////
+	ubuntu 12.10中MyEclipse 10.6+下载+安装+破解
+注： 当前用户使用，可以不改权限。
+
+2012 十一 05共36条评论UBUNTU, 编程工具
+至于MyEclipse在ubuntu的安装教程网上很多，那我为什么我还写这篇文章呢？这次重装Ubuntu之后, 在安装MyEclipse 10.6过程中遇到了一个问题，所以把MyEclipse的安装方法记下来并附上问题解决办法。
+
+一.获取myeclipse
+
+官网下载：http://www.myeclipseide.com/，进入官网找到适合自己得版本，我这里是下载的myeclipse-10.6-offline-installer-linux.run.（注意，官网已被河蟹，真搞不懂，myeclipse官网竟然也落到如此下场.天朝这是种么了.同学们，走.翻.墙.去!!!）.
+
+博主理解找不到资源的痛苦，上次出国下了个最新版myeclipse 10.6.run，上传到网盘跟大家共享,大大的福利哦 ：myeclipse10.06 for linux百度网盘下载地址
+
+二.安装myeclipse
+
+示例路径：/media/thinkcu/Backup/常用软件/Ubuntu/myeclipse.run
+
+示例文件名：myeclipse.run
+
+ctrl+alt+t打开终端，切换到myeclipse所在路径：
+cd /media/thinkcu/Backup/常用软件/Ubuntu/
+设置myeclipse.run的执行权限，使之可以安装：
+sudo chmod +x myeclipse.run
+运行myeclipse安装向导（执行安装向导之前不要忘了先JDK，JDK1.7安装教程）：
+sudo sh myeclipse.run   也可以是：sudo . myeclipse.run（但博主这里不行，用"."执行二话不说，果断卡住,内存丰满！）
+OK，进入图像界面安装myeclipse,(选择安装路径，选择系统，我这里64位的),
+ubuntu12.10 myeclipse10.06 install
+ubuntu12.10 myeclipse10.06 install
+三.建立快捷方式,正常启动程序
+
+在执行myeclipse之前，我们要给它赋上root权限：
+root@lihuoqingfly:~# cd /usr
+root@lihuoqingfly:/usr# sudo chown -R root:root MyEclipse
+root@lihuoqingfly:/usr# sudo chmod -R +r MyEclipse
+root@lihuoqingfly:/usr# cd 'MyEclipse/MyEclipse 10/'
+root@lihuoqingfly:/usr/MyEclipse/MyEclipse 10# sudo chown -R root:root myeclipse
+root@lihuoqingfly:/usr/MyEclipse/MyEclipse 10# sudo chmod -R +r myeclipse
+建立myeclipse的执行文件，类似于windows中的.exe文件
+sudo gedit /usr/bin/MyEclipse
+执行命令后自动打开编辑器，写入如下内容目录改成自己的，引号为英文状态下的:
+
+#!/bin/sh
+#export MOZILLA_FIVE_HOME="/usr/lib/mozilla/"
+export MYECLIPSE_HOME="/usr/MyEclipse/MyEclipse 10/myeclipse"
+$MYECLIPSE_HOME/myeclipse $*
+设置文件权限MyEclipse文件权限：
+sudo chmod 755 /usr/bin/MyEclipse
+在Dash 面板添加MyEclipse 10快捷方式
+sudo gedit /usr/share/applications/MyEclipse.desktop
+执行命令后自动打开编辑器，写入如下内容目录改成自己的，引号为英文状态下的，Icon可以任意更换:
+
+[Desktop Entry]
+Encoding=UTF-8
+Name=MyEclipse 10
+Comment=IDE for JavaEE
+Exec=/usr/MyEclipse/MyEclipse\ 10/myeclipse
+Icon=/usr/MyEclipse/MyEclipse\ 10/icon.xpm
+Terminal=false
+Type=Application
+Categories=GNOME;Application;Development;
+StartupNotify=true
+最后一步，初始化启动一下：
+'/usr/MyEclipse/MyEclipse 10/myeclipse' -clean
+四.安装中遇到的问题
+
+问题一：
+
+在”安装myeclipse-第三步“中遇到了如下问题：
+
+root@lihuoqingfly:~# sh '/media/thinkcu/Backup/常用软件/Ubuntu/myeclipse.run'
+Starting installer - please wait...
+- Preparing install engine
+- Extracted install engine
+/media/thinkcu/Backup/常用软件/Ubuntu/myeclipse.run: 1: /media/thinkcu/Backup/常用软件/Ubuntu/myeclipse.run: : Permission denied
+- Detected JVM architecture: bit
+/media/thinkcu/Backup/常用软件/Ubuntu/myeclipse.run: 190: [: =: argument expected
+- Launching install engine; waiting for completion
+- Exited install engine
+root@lihuoqingfly:~#
+从错误提示可以看出，是JVM的问题。虽然我配置好了path、java_hme等环境，java -version测试jdk也没问题，但是就是装MyEclipse时出错误，好像是找不到自己装的JVM。原因是因为ubuntu自己提供了OPen java。解决办法：提前安装好JDK，并激活JDK，使之可用(下面文章第七步)，具体步骤见这篇文章:
+
+Ubuntu 12.10 配置JDK／chrome jre环境完全教程,特别注意，文章的第七步不可忽略。
+
+问题二：
+
+在Dash面板中启动刚才创建的MyEclipse 10，提示如下错误：
+
+The configuration area at '/usr/MyEclipse/MyEclipse 10/configuration' is not writable.  Please choose a writable location using the '-configuration' command line option.
+myeclipse启动时报错
+myeclipse启动时报错
+解决办法(将MyEclipse和里面所有的文件及文件夹改为777权限，即可读写和执行)：
+
+sudo chmod -R 777 /usr/MyEclipse
+OK,正常启动啦，帅气
+
+myelicpse10.06在ubuntu 12.10中正常启动
+myelicpse10.06在ubuntu 12.10中正常启动
+五.破解文件下载
+
+下载MyEclipse 10.6破解文件，文件里有说明，这里就不罗嗦了.soka
+
+///////////////////破解//////////////////////////////////////
+java -jar hack.jar
+然后按照里面的步骤破解即可。
+
+在Ubuntu12.04 64位下安装成功！！

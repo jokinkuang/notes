@@ -1,0 +1,59 @@
+2014-06-03
+===================================================
+如果你用的是myeclipse 6.0 而且 在使用 
+ 
+@Override 时出现以下错误： 
+ 
+The method XXXXXX   of type XXXXXXXXX must 
+override a superclass method 
+ 
+解决方法一：
+那是因为你的Compiler 是jdk1.5，只要把它改为 1.6就可以了 
+ 
+方法： 
+ 
+1. window ->preferences... -> java -> Compiler 
+ 
+2. Compiler compliance level : 6.0 
+ 
+3.Apply 
+ 
+4. ok 
+ 
+5.完成 
+ 
+The method of type must override a superclass method解决方式
+ 
+The method of type must override a superclass method，提示的是实现类必须实现接口的方法。
+原因：
+实现类里面使用了 @Override
+在1.5下要使用@Override 这个annotation 必须保证 被标注方法来源于class 而不是interface
+解决方法：
+项目右键，项目属性，将项目的编译jdk从1.5改为1.6
+解决方法二：
+删除@Override
+ 
+ ============================
+ myeclipse 10 安装git插件
+下载Eclipse的git插件——EGit。
+下载网址http://download.eclipse.org/egit/updates-2.3/org.eclipse.egit.repository-2.3.1.201302201838-r.zip ，这是截至目前最新版的，如果想下更新版本，访问EGit的下载页面 http://www.eclipse.org/egit/download/即可。
+安装插件：
+把上一步下载的插件解压出来。在MyEclipse的dropins目录(如果没用新建一个)下新建一个egit文件夹，然后把刚 才解压的features、plugins和另外两个jar包全放进去。重启MyEclipse后，进入window-preferences- team，看到Git选项，就说明安装成功了。
+
+前面几步都搞定的话，下面可以进入MyEclipse，使用EGit插件进行项目管理了。首先要注意的是MyEclipse的默认联网方式可能不对，会造成你的MyEclipse无法连接到Github网站，所以先进入window-preferences-General-Network connections，把Active Provider设置为Direct（默认为Native）。或者，Add Privaste Key将私钥加入里面。
+
+然后新建工程，导入，选择from git，然后填入一下信息：
+URI： git@git.corp.ema-tech.com
+HOST: git@git.corp.ema-tech.com
+repository path: /software/gitone
+protocol: ssh
+
+前提是，远程仓库已经有了上面加入的private key对应的公钥。
+
+=====================================================
+git config -e 编辑仓库的origin，fetch等等
+git config -l 显示仓库的origin，fetch等等
+
+====================================================
+
+

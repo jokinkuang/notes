@@ -1,0 +1,43 @@
+系统资源回收和系统相关，所以，鉴于程序结束后，程序分配了但是没有回收的内存空间是否被系统回收，和系统环境相关。
+
+in most modern operating systems, all the programs resources are freed or closed.
+在大多数现代操作系统中，所有程序资源会被释放或关闭。
+
+exit();函数一般会将标准io的数据写入磁盘，关闭打开的文件等。至于回收空间则不是这个函数的行为，而是操作系统的行为。
+
+in a virtual-memory-based system, all memory is returned to the OS when a process is terminated, regardless of whether it was freed explicitly in the application code.
+所有虚拟内存的系统，所有内存将被归还给操作系统，当一个进程结束时。
+
+Even if the OS does some of the work for you, it's always a good idea to clean up after yourself as much as possible. The OS won't call your destructors, it will directly free all of the memory that your program allocated. If I'm remembering correctly, you're on your own when it comes to file handles. When in doubt, play it safe and don't assume the OS will do any of it
+即使操作系统为你做了一些工作，但是还是尽量靠自己清理。
+操作系统不会调用释构器。它只会直接释放进程分配的所有的内存。
+至于文件是否被自动关闭，如果确定操作系统会为你做，可以交给系统。而如果不确定，还是自己做比较安全！
+
+Pressing CtrlC will send a SIGINT to the process, which by default does a mostly-orderly shutdown, including tearing down the memory manager and releasing all allocated heap and stack. If you need to perform other tasks then you will need to install a SIGINT handler and perform those tasks yourself.
+
+Ctrl+C默认会进行一个有次序的关闭，包括卸载内存管理器和释放已分配的堆内存和栈内存。
+如果你要做额外的工作，可以设置SIGINT中断信号的处理函数。
+
+
+总结：
+    程序结束前，Ctrl+C前，一些内存分配没有回收，在大部分现代操作系统中是可行的，系统也会回收，这也相当于手动回收。但是，这主要针对那些一直伴随程序整个生命周期的动态分配内存。而逻辑过程动态分配的内存，务必一个分配一个回收。因为这是程序运行过程的逻辑错误，不再属于内存回收问题了！而这个过错的内存泄漏是会导致程序崩溃的！运行越长，危害越显著，甚至程序运行时间长一点就崩溃。
+    所以，运行过程中的内存，必须在不使用时就回收。
+    而伴随整个程序生命周期的内存，做到尽量回收，也可以直接退出，交给程序回收。
+
+    但是，关于文件等关闭操作，最好还是手动关闭，而不要交给操作系统，因为这个不同操作系统是不同的，貌似windows就不是。
+    对于文件的处理，也需要注意对终结信号的处理，
+
+ps:
+If the process quits, a memory leak will NOT normally occur.
+
+Most of the memory you allocate will be freed on Ctrl+C. If you see memory usage not return to its prior level, it is almost certainly caused by buffered filesystem blocks.
+
+However, you should definitely clean things up, in particular if you have used any other types of resources:
+
+Files created in temporary directories won't be deleted. This includes /dev/shm, leaving such a file could be considered a "memory leak".
+System V or posix shared memory segments won't get thrown away when your process quits. If this bothers you, clean them up specifically. Alternatively, clean them up on a subsequent run.
+Normally a leak (of a persistent or semi-persistent object e.g. file) doesn't matter if a subsequent run doesn't leak more memory. So cleaning up on a future run is good enough.
+
+Imagine a process running every 5 minutes from "cron", if it crashes on each run and leaves some mess, it's still ok provided each run cleans up the mess from the previous crash.
+    
+

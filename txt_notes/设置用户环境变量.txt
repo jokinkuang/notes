@@ -1,0 +1,8 @@
+设置用户环境变量：
+1，赋值
+2，export命令设置
+3，验证
+
+ZYX = /u/zyx        //赋值
+export ZYX          //设置
+env | grep ZYX      //验证

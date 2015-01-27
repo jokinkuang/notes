@@ -1,0 +1,115 @@
+链表的插入，删除可以有不同的实现方式，下面是一个相当有趣的实现。首先，看链表的结构（head也用于存放数据）：
+    (数值段，next) ->(数值段，next) ->(数值段，NULL) //最后一个为 NULL.
+next是一个指针。要插入一个结点，就是修改next的值，即操作next指针的指向。
+从修改一个指针的值的方法来看，只有一种，就是赋值。但是就赋值而言，则有2种，一是直接赋值(int a = 5)，另一是间接赋值(*p = 5)。
+对于后插式链表，一般直接赋值的方法是： p->next = new_node; //相当于 a = 5;
+而使用间接赋值，则是 **pp = &(pre->next); (*pp)->next = new_node; //相当于 *p = 5; 但是问题就是，head指针是没有next段的。
+而使用间接赋值，则是 **pp = &(p->next); *pp = new_node; //相当于 *p = 5;
+要理解下面的例子，必须清楚，上面的例子，p与*pp是不同的结点！
+p->next = new_node 这里的p是最后一个结点。其实是 p = pre->next; 即p是最后一个结点（数据段，NULL）的整体。
+*pp = new_node 这里的pp是最后一个结点的next指针的地址。相当于&p->next; 此时pp是最后一个结点（数据段，NULL）里的NULL的地址空间。
+=================================================
+有趣的地方：
+      head（第一个）  第二个
+（数据段，next）->(数据段，next)->
+
+**pp = &head。	*pp可以看成2种形式，
+
+*pp:          它是next里的地址值。所以，我们可以将*pp只是看作一个指针大小的空间里的值。
+(*pp)->next:  *pp里的地址值其实是一个结构体的地址空间。所以，我们可以将*pp又看作一个结构体指针。
+*pp = (*pp)->next  就位置而言，*pp是第一个结构体的next空间。(*pp)->next则是第二个结构体的next的空间。这样的赋值就相当于删除了第二个结构体。
+
+所以，C语言里的东西需要强调我们怎么看。同一个内存，你怎么看，它就是怎么样！或者，遇到一个内存时，一个指针时，可以考虑可以有多少种方式引用，然后从这些方式里就可以更深入地理解这些内存数据。
+对于指针使用： 可以理解为任何类型的指针。可以修改指针指向空间的值。可以将指针指向作为一个普通变量使用。
+对于指针的指针使用： 可以理解为任何类型的指针。可以修改指针指向的指针的值。可以将指针指向的指针作为一个普通指针使用。这又回归到对于指针的使用。
+变量是多个内存单元。
+指针是只有一个内存单元。
+指针的指针也是只有一个内存单元。
+
+从下面的例子可以看出，使用指针的地址，即使用next段的地址遍历，可以省略对head的特殊处理。即可以统一处理任何情况，使代码更精简！！
+
+
+/* 插入。使用指针的地址实现，修改指针的指向 */
+static inline struct iochannel * iochannel_list_add(struct iochannel *head, struct iochannel *channel) {
+    struct iochannel **pp = &head;	//取得head指针的地址。
+    while (*pp) 			//判断当前的next字段是否为空。
+        pp = &(*pp)->next;		//next不为空，则存储next指针的地址空间。
+    //跳出循环时，*pp为空。但是还是可以修改！
+    *pp = channel;	//无论head指针是否为空，pp都是next的地址。*pp就是next的值。
+    return head;	//因为是通过地址来修改指针，所以，上面的都可以影响到head指针串联起来的链表。
+}
+
+/* 插入。使用指针实现，修改指针的值和指向 */
+static inline struct iochannel * iochannel_list_add_4(struct iochannel *head, struct iochannel *channel) {
+    struct iochannel *pre = head;	//记录上一个结点指针
+    struct iochannel *p = head;		//记录当前结点指针
+
+    for (; p; pre = p, p = p->next);	//遍历，直到最后一个结点。
+
+    if (pre == NULL)			//通过遍历后，p是指向next的值，而不是next的地址，所以无法通过p来修改next。只能通过pre上一个结点指针。
+	//pre = channel; //错误!!  这只是修改pre指针自身的指向，并没有修改head指针的指向！        
+	head = channel;
+    else
+        pre->next = channel; //正确!! pre->next就是head->next，所以是head的next段指针，故可以赋值。
+
+    printf("p = %p, head = %p\n", p, head);
+
+    return head;
+}
+
+插入总结：	使用指针地址可以避免head为空的特例。
+1，遍历是通过判断结点的next段是否为空，所以其next为空时就是最后一个结点。
+2，后插式链表最重要的是记录前一个结点。当(;p;p=p->next)时，p已经被置为空，是无法引用的！
+3，通过地址来循环，当(;*pp;pp=&p->next)时，pp是next空间的地址，虽然next其值为空，但是却可以继续引用。这就是上面通过地址的有趣的地方。
+4，下面删除里地址是无效的，这是因为遍历到要删除的结点，pp指向的是要删除的结点自身的地址，要实现删除，必须还要知道前一个结点。所以，删除使用地址就显得没有意义。
+5，后插式是改不了要考虑操作的是否是头指针。但是插入时使用上面的地址的方法，却可以很巧妙地避免这步操作！！
+6，插入时主要注意head指针是没有next段的。
+
+/* 删除。使用指针地址实现。*/
+static inline struct iochannel * iochannel_list_remove(struct iochannel *head, struct iochannel *channel) {
+    struct iochannel **pp;
+    for (pp = &head; *pp; pp = &(*pp)->next) {	//当head为NULL时直接返回。
+        if (*pp == channel) {			//神奇的地方是： next空间可以看作一个指针空间，也可以看作一个结构体指针。
+	//前一个结点的next段 = 下一个结点
+            *pp = (*pp)->next;			//最后一个结点的指针是存放是前一个的next段。所以，对于每个结点，*pp就是前一个结点的next段。
+				                //(*pp)->next对于每个结点，(*pp)->next就是指下一个结点。
+        //注： 这句和for循环里就差了一个&符号。遍历是获得下一个next的地址。删除/增加是引用这个地址的值。所以区别仅仅是一个取址符和引用符。就一个符号的差别，程序就错了！！
+            break;
+        }
+    }
+    //*pp为空时，退出循环
+    return head;
+}
+
+/* 删除。使用指针实现。*/
+static inline struct iochannel * iochannel_list_remove_3(struct iochannel *head, struct iochannel *channel) {
+    struct iochannel *pre = head;
+    struct iochannel *p;
+    for (p = head; p; pre = p, p = p->next) {
+        if (p == channel) {
+            if (p == head)
+                head = head->next;
+            else
+                pre->next = p->next;
+            break;
+        }
+    }
+    return head;
+}
+
+删除总结：	使用指针地址可以避免处理删除head特例。
+1，删除只是将next段指针赋值为NULL，与最后一个结点的next段无关，所以不需要得到最后一个结点的next段的地址。
+2，后插式链表最重要的是记录前一个结点。
+3，后插式链表一直都要考虑是否是头结点，因为头结点的处理比较特殊。
+4，删除时主要注意删除头结点时，是没有前驱的！即不能用pre->next = p->next！
+5, 删除头部: head = pre->next;
+   删除中间: pre->next = p->next;	//p->next != NULL
+   删除尾部: pre->next = p->next;	//p->next == NULL
+static inline void iochannel_list_dump(struct iochannel *head) {
+    struct iochannel *p;
+    printf("***********Active Channel Dump***************\n");
+    for (p = head; p; p = p->next) 
+        printf("fd = %-4d               status: active \n", p->fd);
+    printf("*********************************************\n");
+}
+

@@ -1,0 +1,160 @@
+如果你没有时间，可以直接看最后面的例子。
+183  /**
+184  * list_entry - get the struct for this entry
+185  * @ptr:    the &struct list_head pointer.
+186  * @type:   the type of the struct this is embedded in.
+187  * @member: the name of the list_struct within the struct.
+188  */
+189 #define list_entry(ptr, type, member) \
+190     ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+
+225 #define list_for_each_entry(pos, head, member)              \
+226     for (pos = list_entry((head)->next, typeof(*pos), member);  \
+227          &pos->member != (head);                    \
+228          pos = list_entry(pos->member.next, typeof(*pos), member))
+
+
+
+ 76 struct e_main_loop {
+ 77     struct list_head io_channel_list;   //头部-指针
+ 78     bool             quit;   /* whether quit the main loop or not */
+ 79     int              retval; /* return value when quit */
+ 80 };
+ 81 
+ 82 static struct e_main_loop _main_loop;
+
+INIT_LIST_HEAD(&_main_loop.io_channel_list);    //初始化头部。
+
+ 41 struct io_channel {
+ 42     struct list_head list_member;   //结点-指针
+ 43     bool             mark_dead; /* mark that this channel is about to be destroyed */
+ 44 
+ 45     int              fd;
+ 46     io_channel_type  type;
+ 47     e_io_func        callback;  /* when fd is avaiable, this hook will be called */
+ 48     void *           user_data; /* user data for callback */
+ 49 
+ 50     union {
+ 51         struct timer_data  timer_data;
+ 52         struct server_socket_data server_socket_data;
+ 53         struct client_socket_data client_socket_data;
+ 54     };
+ 55 };
+
+        //结点-指针（地址），头部-指针（地址）
+115     channel = io_channel_new(fd, type, func, user_data);
+116     list_add_tail(&channel->list_member, &_main_loop.io_channel_list);
+
+===============================================================================================
+        // 结构体（变量名）， 头部-指针（地址）， 结点-指针（变量名）
+        struct io_channel *channel;
+103     list_for_each_entry(channel, &_main_loop.io_channel_list, list_member) {
+104         if (channel->fd == fd && channel->type == type)
+105             return channel;
+106     }
+
+189 #define list_entry(ptr, type, member) \
+190     ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+
+225 #define list_for_each_entry(pos, head, member)              \
+226     for (pos = list_entry((head)->next, typeof(*pos), member);  \
+227          &pos->member != (head);                    \
+228          pos = list_entry(pos->member.next, typeof(*pos), member))
+
+ptr = (head)->next;     =>  ptr = (&_main_loop.io_channel_list)->next;  =>  ptr = &list_member;即list_member变量的实际地址。
+type = typeof(*pos);    =>  type = typeof(*channel);  => 因为channel是指针，所以typeof(*channel)结果是 struct channel   即list_member所在的结构体名。
+member = member;        =>  member = list_member;   即list_member的成员名称
+
+list_entry里面的(type *) 就变成了 (struct channel *)0
+
+typeof说明：
+    下面是用类型作参数的例子：
+       typeof(int *) a,b;
+    等价于：
+       int *a,*b;
+
+    下面是两个等效声明，用于声明int类型的变量a。
+       typeof(int) a; /*int类型*/
+       typeof('b') a; /* GCC中这个表达式的类型是int(自动提升为int)，
+                      注意typeof(char)和typeof('b')得到的不是一样的，这个用sizeof可以看出来*/
+
+
+    一般情况下用typeof就可以了，但是如果要于ISO C兼容的话，最好是用双下划线的形式：__typeof__。
+    typeof和typedef很像，事实上，只要能用typedef的地方就可以用typeof。
+
+
+
+
+
+
+
+==============================================================
+#include <stdio.h>
+#define STRUCT_OFFSET(stru_name, element) (int)&((struct stru_name*)0)->element
+struct stru_addr 
+{
+        int a;
+        char b;
+        int d;
+        char c;
+
+};
+
+int main(void)
+{
+        struct stru_addr s;
+        printf("start addr of s = %x\n", &s.a);
+
+        int offset = STRUCT_OFFSET(stru_addr, c);
+
+        printf("c_addr = %x, offset = %d\n", &s.c, offset);
+        printf("start addr of s caculated from c addr: %x\n", (char *)&s.c - offset);
+        return 0;
+}
+
+解读：
+1，(struct stru_name*)0 是表示，将0作为struct stru_name的地址。换言之，就是使得struct stru_name的首地址为0.
+2，((struct stru_name*)0)->element 是表示，将指针指向stru_name结构的element成员，即只是将结构体首地址值加上element成员的偏移，使指针指向element成员。可见，这步只是执行了 0 + element的偏移量。并不是引用地址。所以，不会出现错误。
+3，&取element成员的地址。&获得的是成员的地址，是相对结构体首地址的，即该地址 - 结构体首地址 = 成员偏移量。而因为设置了结构体首地址为0，故成员的地址就是它与结构体首地址的偏移量。 
+4，得到了偏移量，用当前成员的实际地址 - 偏移量 就是 结构体实际首地址。所以，(char *)&s.c - offset就是该成员实际所在的结构体的首地址。
+
+关键：
+1，结构体首地址 + 成员offset = 成员地址。
+2，当结构体首地址为0时，0 + 成员offset = 成员地址 = 成员offset
+3，结构体首地址 = 成员地址 - 成员offset
+4，因为它使用了类型作为参数，所以，不用宏是做不到的喔！但其实，使用typeof获得类型就可以在普通函数里也能做到！ 这主要因为，普通函数是不能直接传递 类型名， 成员名之类的，但是它能够通过struct io_channel *channel;最后，发现还是不行，因为普通函数不能传递“成员”名，然后直接构成channel->element。这点通过参数是实现不了的，只能通过宏。这个条件限定了，这个求偏移的方法只能使用宏实现。但是，其实又不是这样的，如果假设这个成员名是默认的，即大家都是int abc,那么，默认就是处理abc而不是通过参数传入，那么完全可以避免宏的使用！！只是，一旦传入的结构没有该名称，就会出错，这无关紧要，因为你使用宏的时候，传递错误也会导致同样的错误啊，主要是调用者不遵循接口的规则！最后，还是发现不行，因为函数传递参数，不能只是传递一个变量名，函数定义时，每个形参都有类型的，如果要支持任何类型的接口，那么这个形参的类型只能是void *，既然你已经确定了形参的类型，那么还需要使用typeof吗，所以，通过变量名，获得结构体类型这段还是需要通过宏实现！ 宏是嵌入到代码的！所以，在宏里声明的变量看在哪里调用，就属于哪个调用栈。
+
+注： 不要以为typeof是标准C，它是C99后一些编译器自己添加的关键字，GNU的支持。
+
+再看linux内核中的，通过成员变量求结构体地址的宏：
+ #define list_entry(ptr, type, member) \
+     ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+     
+ ptr: 成员变量member的实际地址
+ type: 结构体类型,即 struct XXX 所以 type * 得到（struct XXX *）  type如何得到呢？ linux是通过 typeof(一个结构体变量) 或 typeof(* 一个结构体指针) 得到结构体类型。
+ member: 成员名    
+ unsigned long 和上面的int区别只是允许支持的最大的偏移量。unsigned long支持的偏移量会大很大！但其实int已经足够。
+ 前面为什么要将ptr转会为char *呢？ 又忘记了，指针减去一个值，是根据指针类型计算步长的。获得的成员偏移量是以字节为单位的，所以，步长要求是字节，所以，要求将指针转换为字节类型指针。(char *)ptr - n 是往回n个字节。(int *)ptr - n 是往回4 * n个字节！ 所以，这里是要转换的。
+ 
+ 
+ 扩展：
+ list.h 是通过记录member的地址，即结构体里某个特定成员。假如某些结构体里都有一个成员member，而member是一个关联起来的链表或其他有规律的结构，那么，我们可以通过获得member的地址，继而获得该member所在的结构体的地址，继而获得该结构体的数据。list.h就是这样实现的。
+ 
+ list.h只是支持一类结构体，但是其实可以支持不同的结构体组成的链表，只需要在结构体里加一个结构体标志，用于标识这个结构体属于哪个类型。
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     

@@ -1,0 +1,13 @@
+HTTP CHUNKED 数据段结构：
+
+http协议之chunk数据结构
+
+chunk编码其实是一种动态数据传输协议，针对大数据可以动态传输，网页可以动态显示。
+chunk编码格式如下：
+[chunk size][\r\n][chunk data][\r\n][chunk size][\r\n][chunk data][\r\n][chunk size = 0][\r\n][\r\n]
+
+如： 			0d 0a 30 0d 0a 0d 0a
+1，chunk size是用16进制字符串表达的。如0字节，则传输"0" 字节值是\r\n[30]\r\n. 如1552，则传输字符串"610" 字节值是\r\n[36 31 30]\r\n
+2，chunk data是用二进制表达的。如\r\n[XX XX XX XX]\r\n
+
+http_parser的转换是，传入的字符串，解析，得到一个chunk数据段，就回调一次。最后一个0字段不回调。如果是普通的字符串数据段，则根据调用多少次parser_execute，一次则一个数据段回调。如果将一个数据包的数据段分n次执行parser_execute，则会回调n次数据段。

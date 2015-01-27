@@ -1,0 +1,124 @@
+SSH Key的创建和添加过程详解
+
+无论是创建github的SSH key还是对仓库git的SSH key，过程都是一样的。
+
+1，检查SSH key：
+    cd ～/.ssh
+   如果显示No such file or directory，则说明本地还没有创建过SSH key。跳到第三步。
+    ls -al
+   将可能看到以下文件：
+   XXX              //私钥
+   XXX.pub          //公钥
+   authorized_keys          //能够连接到本机的电脑的公钥集合
+   known_hosts              //本机连接过的主机信息集合
+   config           //可能不存在
+  
+2，最好备份该目录下的SSH keys：
+    mkdir ~/ssh_key_back_up
+    cp ./ ~/ssh_key_back_up
+   
+3，生成新SSH key：
+    ssh-keygen -t rsa
+    然后它会提示Enter file in which to save the key (/home/ema/.ssh/id_rsa): 
+    输入/home/ema/.ssh/github_id_rsa
+    然后它会提示Enter passphrase (empty for no passphrase):
+    输入至少6位的密码 
+    然后它会提示Enter same passphrase again:
+    再输入一次
+    然后它会输出：
+    Your identification has been saved in /home/ema/.ssh/github_id_rsa.
+    Your public key has been saved in /home/ema/.ssh/github_id_rsa.pub.
+    The key fingerprint is:
+    ea:ed:2a:dd:b5:75:7c:7f:ea:1f:24:b5:56:c4:af:9b ema@ema-TA75M
+    The key's randomart image is:
+    +--[ RSA 2048]----+
+    |               ..|
+    |               ..|
+    |               .o|
+    |              . +|
+    |        S    o = |
+    |       .  . . B .|
+    |     ... . o . =.|
+    |    ..... .   E +|
+    |     .ooo    .ooo|
+    +-----------------+
+    
+    这时生成key成功。
+
+4，在github上添加SSH key：
+    gedit /home/ema/.ssh/github_id_rsa.pub
+    复制里面的内容，粘贴到github的SSH key配置页里。
+    
+5，试着连接github：
+    ssh -T git@github.com
+   
+   然后提示
+    The authenticity of host 'github.com (192.30.252.128)' can't be established.
+    RSA key fingerprint is 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48.
+    Are you sure you want to continue connecting (yes/no)?
+   输入：yes
+   然后提示 
+   Warning: Permanently added 'github.com,192.30.252.128' (RSA) to the list of known hosts.
+   然后输入上面的6位以上的密码
+   然后提示Hi hello-xk! You've successfully authenticated, but GitHub does not provide shell access.
+   成功连接。
+   
+4，在远程git仓库添加帐号，添加SSH key：
+   将github_id_rsa.pub发给远程git仓库的持有人，该持有人会执行上面的操作，即将里面的内容复制出来，加入到远程仓库的SSH key里面。
+
+5，试着连接远程git仓库：
+    ssh -T 远程仓库的地址 或者 git clone 远程仓库的地址 等等试图访问远程仓库的操作。
+    接下来的和上面的一样。
+    
+=========================================================================
+详细解析：
+1，cd ～/.ssh     一般而言，ssh key会放在用户目录下的/.ssh，也可能是其它目录。这只是默认。
+2，ls -al看到的文件
+   XXX                  //XXX与XXX.pub是对应的，前者是私钥，后者是公钥。
+   XXX.pub
+   authorized_keys      //这个是能够连到本机的机器的公钥。
+   known_hosts          //这个是本机连接过的主机
+   config           //可能不存在
+   
+   cat authorized_keys
+   ssh-rsa AA***************H9 ema@ema-TA75M
+   ssh-rsa AA***************Rn ema@ema-TA75M
+   可见，这些是本机信任的公钥，是XXX.pub里面的内容，像添加到github一样，把XXX.pub里面的内容追加到这个文件，其对应的主机就能连到这台电脑。
+   比如，把本机的XXX.pub放到github上，本机就能够连到github上了。
+        把本机的XXX.pub放到远程git仓库上，本机就能连到远程git仓库了。
+        把电脑A的XXX.pub追加到本机上，电脑A就能够连到本机了。
+   所以，如果要电脑A能够通过SSH连到电脑B，把电脑A的XXX.pub公钥里面的内容追加到电脑B的这个文件即可。
+   
+3，ssh-keygen -t rsa   //意思是，ssh的公钥私钥密钥对使用rsa类型。一般都是这个。
+   提示Enter file in which to save the key (/home/ema/.ssh/id_rsa): 
+   意思是，默认会生成.ssh/id_rsa，这就是为什么要先备份，因为新手不知道这点，很容易覆盖了已经存在的id_rsa,这会导致问题，下面解答。
+   一般而言，这里应该尽量加前缀标识，比如用于github的，可以为github_id_rsa;用于git的，可以为git_id_rsa;或者XXX_github_id_rsa等等。
+   总之，别替换了已经存在的key文件。
+   
+   接着，要求输入私钥的密码Enter passphrase (empty for no passphrase):
+   这个为什么需要呢？ 如果每个人用你的电脑，随便ssh一个连接就连上了，那不就毫无安全性。这个密码就是用于安全性保护。只有知道了密码，才能使用密钥文件，才能进行连接。所以设置后，每次对目标网站进行连接时，都要求输入密码。
+   这个最好设置，因为不应该让任何人都能使用ssh连接到远程主机，而是知道密码的才能用。
+   
+   （解答）
+   这个操作的结果，一般都生成2个文件： XXX 和 XXX.pub
+   其中，XXX叫私钥，XXX.pub叫公钥。私钥是放在本机的，公钥是放在本机需要连接到的远程电脑的。
+   连接过程，远程电脑会用XXX.pub公钥加密一些信息，然后本机用XXX私钥解密，然后发给远程电脑，远程电脑得到信息和加密前的信息一致，则表示可以建立连接。
+   现在，应该知道为什么XXX文件被覆盖，XXX文件被删除后果，那就是，无法连接上远程电脑。得到远程的加密串后，本机无法解密，验证就出错，就无法建立连接。
+   
+4，ssh -T git@github.com后提示Are you sure you want to continue connecting？
+   因为是第一次建立连接，所以会有这个提示。
+   接着提示Warning: Permanently added 'github.com,192.30.252.128' (RSA) to the list of known hosts.   
+   因为它必须得到密钥文件，所以需要输入上面输入的密钥文件的密码来解锁密钥文件。
+   Hi hello-xk! You've successfully authenticated, but GitHub does not provide shell access.
+   意思是，通信成功。对方的信息将会被追加到known_hosts，表示主机信息是知道的。
+   
+   
+   
+其它可见： SSH相关.txt 讲解不用密码验证的ssh连接。   
+   
+   
+   
+   
+   
+   
+   

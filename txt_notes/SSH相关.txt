@@ -1,0 +1,206 @@
+SSH相关
+
+1，重装系统后，只要用户下的.ssh目录里面的key都在，那么还是可以使用它连接上git仓库（重装时，用户名相同，至于不同就不清楚）
+2，通过ssh登上某个用户，然后使用该用户的key连上git仓库，是不可以的（这个不清楚）。
+3，重装后，再次使用ssh localhost会因为密钥指纹不对而需要重新配置，根据提示执行那句命令即可。操作前，可备份那两个重要的文件。
+   ssh-keygen -f "/home/ema/.ssh/known_hosts" -R localhost
+
+
+首先，要能远程ssh登录到服务器，必须在服务器里安装openssh-server。
+
+与SSH相关的命令有：
+1，ssh自身。		ssh localhost
+2，ssh安全策略。	ssh-keygen -t rsa
+3，ssh附着工具。	scp -P rssh_port ruser@rhost:r_filepath l_filepath
+				scp -r l_filepath ruser@rhost:r_filepath
+
+
+一，SSH公钥私钥存放文件。
+	本地客户端连接远程客户端，需要发送公钥到服务器，自己保存私钥。
+	远程客户端访问本地服务器，需要得到远程客户端的公钥，因此需要保存公钥。这个文件为authorized_keys，用追加进行保存。
+
+二，SSH安全相关行为。
+1，修改端口：		sudo vim /etc/ssh/sshd_config 里面的port
+				sudo service ssh restart 或 sudo /etc/init.d/ssh restart
+
+	注： 修改ssh会影响到git远程操作 ！！
+
+2，密钥相关：		
+	2.1   登录远程服务器而不用输入密码。本地连接ssh也一样。
+			1，生成一对密钥： 公钥和私钥（私钥本地保存，公钥发给服务器追加到服务器的ssh安装目录下的authorized_keys文件）
+			// 公钥用于服务器加密。私钥用于本地解密。
+			// 连接过程：	本地主动连接服务器，发公钥到服务器。
+							服务器收到公钥，找到本地公钥，加密一个字串，如123，将加密的字串发回本地客户端。
+							本地客户端收到，用私钥解密，将解密后的字符串发回服务器，服务器收到，判断是否解密成功。成功，表客户端合法。失败，表客户端是伪造的。
+			// 验证成功：	可以进行传送。至于传送过程数据要不要也使用公钥加密，可视数据的重要性。重要则可以加密，不重要则可以明文。
+
+			不用密码登录，意思是公钥私钥验证成功，则认为是合法登录用户。不再验证密码。
+
+	2.2   如何能使本机能访问登录git远程服务器。
+			1，公钥私钥的作用，不仅可以应用在登录验证，也可以应用在是否具有验证权限来验证。这种验证机制可以使用在任何一个环节。
+			需要将公钥上传到服务器才能进行git仓库的访问，这可能的原因：
+				1，git是通过本地与服务器进行ssh连接进行数据传输的，而不是任何用户都可以对该服务器进行ssh连接。但是，这样，github上公用的仓库是怎样管理的？任何人都可以ssh到该远程服务器？？
+				2，公钥私钥验证只是用于验证该用户是否具有ssh验证权限。即服务器如果没有该用户的公钥，服务器连登录的机会都不给该用户。当然，服务器没有该用户的公钥，服务器是默认进入用户名，密码的验证。换言之该服务器的管理员用户还是可以登录的，即使没有公钥。
+				3，公钥私钥验证是为了服务器的权限管理。
+				以上3点均为猜测。
+		   要得到服务器的git，需要将公钥上传给服务器。创建公钥私钥时，会有一个密码设置，可以设置登录到服务器时的密码。这个密码是为了本地安全，还是为了服务器安全？如果该密码为空，是否意味着，使用密钥登录服务器时就不需要密码，毕竟git远程仓库时，要输入的是这个设置的密码。那么，这个设置的密码是为了不让其他用户使用该私钥-公钥对进行远程连接了？答案貌似是正确的！这个密码是私钥密码，用来防止别人将私钥拷贝出去使用。有了私钥密码，那么就不可以进行无密码登录了！仍旧需要输入私钥密码。
+
+3,文件
+     ~/.ssh/identity
+             该用户默认的 RSA1 身份认证私钥(SSH-1)。此文件的权限应当至少限制为"600"。
+             生成密钥的时候可以指定采用密语来加密该私钥(3DES)。
+             ssh(1) 将在登录的时候读取这个文件。
+
+     ~/.ssh/identity.pub
+             该用户默认的 RSA1 身份认证公钥(SSH-1)。此文件无需保密。
+             此文件的内容应该添加到所有 RSA1 目标主机的 ~/.ssh/authorized_keys 文件中。
+
+     ~/.ssh/id_dsa
+             该用户默认的 DSA 身份认证私钥(SSH-2)。此文件的权限应当至少限制为"600"。
+             生成密钥的时候可以指定采用密语来加密该私钥(3DES)。
+             ssh(1) 将在登录的时候读取这个文件。
+
+     ~/.ssh/id_dsa.pub
+             该用户默认的 DSA 身份认证公钥(SSH-2)。此文件无需保密。
+             此文件的内容应该添加到所有 DSA 目标主机的 ~/.ssh/authorized_keys 文件中。
+
+     ~/.ssh/id_rsa
+             该用户默认的 RSA 身份认证私钥(SSH-2)。此文件的权限应当至少限制为"600"。		//对于多个私钥，是否使用追加呢？
+             生成密钥的时候可以指定采用密语来加密该私钥(3DES)。
+             ssh(1) 将在登录的时候读取这个文件。
+
+     ~/.ssh/id_rsa.pub
+             该用户默认的 RSA 身份认证公钥(SSH-2)。此文件无需保密。
+             此文件的内容应该添加到所有 RSA 目标主机的 ~/.ssh/authorized_keys 文件中。	//远程主机。 本机作为远程主机时，就将pubkey >> authorized_keys里
+
+     /etc/ssh/moduli
+             包含用于 DH-GEX 的 Diffie-Hellman groups 。文件的格式在 moduli(5) 手册页中描述。
+
+附录：
+http://blog.csdn.net/redhat7890/article/details/5131780
+用密钥登录linux服务器
+周海汉 /文 2009.2.13
+
+登录linux时省去输入用户名和密码，这样可以“偷懒”。最偷懒的方式是将sshd_config里面配置允许空密码。
+但这样就好像“北京欢迎你”所唱的“我家大门常打开”，这可不是好事。尤其某些人，喜欢用root账号，兼职相当于把客厅摆在大
+
+街上。
+为什么putty/pietty没有保存密码，自动输入的功能呢？那样本来可以偷一下懒的。不过，putty还是可以不用输密码，那就是采用
+
+rsa/dsa公私钥。而且还能保证安全。当然，本地私钥要保护好，不要被人拷走。也可以将私钥输入密码保护。不过那样达不到偷懒
+
+的目的了。每次登录还得输入打开私钥的密码。当然，其安全性已经与密码交互不可同日而语了。因为私钥是1024位的随机字符串，
+
+破解起来怕得几百年。而我们人能记住的密码，一般就8位以内，还不能包含太多各种无意义字符。
+公钥私钥还有别的好处，比如大家使用统一账户登录，但我又不想泄露密码，那么可以分发私钥，用不同的密码保护。
+
+1.生成公钥私钥
+$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/zhouhh/.ssh/id_rsa): testa
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in testa.
+Your public key has been saved in testa.pub.
+The key fingerprint is:
+85:97:91:94:4a:21:00:d5:08:e3:cc:b0:63:0b:0f:cf zhouhh@xxxx
+
+将testa拷入/home/zhouhh/.ssh/id_rsa
+将testa.pub拷入/home/zhouhh/.ssh/authorized_keys
+
+这两个文件同时可以拷给其他linux机器相应的.ssh目录下。
+这时用scp等拷贝文件时也不必输密码了。
+
+2.
+
+用超级用户权限修改/etc/ssh/sshd_config
+
+RSAAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile      .ssh/authorized_keys
+
+如果同时修改：
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+UsePAM no
+则会禁止采用password登录
+
+重启sshd
+service sshd restart
+
+如果不修改.ssh为0700，将打印
+Server refused our key
+
+这是为了防止私钥被人拷走设的权限保护。
+
+3.将testa的私钥传到windows下
+用putty的puttygen导入该文件，再保存私钥为zhh.ppk,公钥为zhh.pub
+因为putty的rsa的私钥和openssh的不兼容，所以要导一下。
+
+4.putty配置ssh的auth的key文件为刚生成的zhh.ppk。
+ssh的data也可以将用户名配为登录用户zhouhh，否则putty登录时会提示用户名。
+
+5.连接服务器，不用输入密码直接登录了。
+///////////////////////////////////////////////////////////////
+linux下生成密钥
+生成密钥步骤……
+[star@linux star]$gpg --gen-key
+
+
+Your selection? 回车
+
+
+What keysize do you want ?(1024)回车
+
+
+Key is valid for?(0)回车
+
+Key does not expire at all
+
+is this correct(y/n)? Y
+
+
+Real name: star33375249
+
+
+Email address:star33375249@126.com
+
+
+Comment：辛星的密钥(注：输入中文终端要支持UTF-8)
+
+
+Enter passphrase：输入密钥口令
+Repeat passphrase:输入密钥口令
+
+查看生成的密钥：$ ls -la
+
+ls .gnupg/
+
+gpg.conf pubring.gpg pubring.gpg~ random_seed secring.gpg trustdb.gpg
+///////////////////////////////////////////////////////////
+Do you want to login other's host without input password?To do as following steps: (Linux to Linux)
+
+First: 
+[root@host127 ~]# ssh-keygen -t rsa 
+this command will generating public/private rsa key pair. 
+Your identification has been saved in /root/.ssh/id_rsa
+Your public key has been saved in /root/.ssh/id_rsa.pub
+
+
+second:
+[root@host127 ~]# scp /root/.ssh/id_rsa.pub root@192.168.10.184:/root 
+[root@host127 ~]# ssh 192.168.10.184 
+[root@abc ~]# cat /root/id_rsa.pub >> /root/.ssh/authorized_keys 
+
+ok,you will login 192.168.10.184 without input password.
+
+If you want to login remote linux server with putty work in your local windows, you could do as: (Window to Linux)
+
+1)First, use ssh-kengen to creat public/private rsa key pair.
+2)Then, [root@localhost .ssh]# cat id_rsa.pub > authorized_keys
+
+3)Download the private key with winSCP, and then use puttygen to convert the private key to the format which linux could accept.
+
+4)Set putty, and load the new pricate key.
+
+Now, you could loing remote linux server without input password.

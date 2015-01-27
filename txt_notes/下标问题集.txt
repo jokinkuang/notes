@@ -1,0 +1,11 @@
+0123456789
+abcdefghij
+
+buf+i = buf[i];
+buf+0 = a
+buf+1 = b
+buf+len = buf + 10 = Exception
+
+memmove(buf, buf+1, 9)
+memmove(buf, buf+7, 3)
+memmove(buf, buf+len-i, i)

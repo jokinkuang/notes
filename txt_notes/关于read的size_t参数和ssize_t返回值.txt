@@ -1,0 +1,14 @@
+关于read的size_t参数和ssize_t返回值。
+ssize_t read(int fd, void *buf, size_t count);
+
+
+size_t :    unsigned int		0-4294967295	4GB
+ssize_t:    signed int			-X - 2147483647	 2GB
+
+
+换言之，如果尝试读取count为4GB的字节数，结果最多能返回2GB.  那么，是否意味着，这个read只能读取2GB ？ YES ！
+手册里有一句： If count is greater than SSIZE_MAX, the result is unspecified. 
+			 如果size_t的count的值比ssize_t的最大值还要大，结果不可预知。
+
+换言之，虽然count的类型为size_t，只是为了说明它是一个无符号的参数，而不是表示它可以为任何值！
+	一次最多可以读取ssize_t个字节！

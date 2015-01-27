@@ -1,0 +1,145 @@
+常见错误的解决方案：
+
+<此错误放在头部，是因为已经错了两次了！>
+0，Addresses always evaluate as true  这个报错是指直接将指针值作为if判断语句。
+    出现这个错误，首先看准报错行，不要自以为是那一行。
+    然后，一般是这样导致的： if (__is_full) {}
+    这是因为，漏掉了一个括号，就导致是函数指针，那么if语句一直是true。
+    
+    解决方案很简单，就是改正过来 if (__if_full()) {}
+    
+============        
+1，conflicting types for XXX， XXX was here 错误。
+
+pretty_print.c:31: error: conflicting types for ‘vmi_print_hex’
+libvmi.h:749: note: previous declaration of ‘vmi_print_hex’ was here
+
+常见此类问题的原因如下（引）
+错误：
+test.c:22: error: conflicting types for 'urlencode'
+test.c:18: error: previous implicit declaration of 'urlencode' was here
+ 
+原因一：
+原来是因为没有先做函数声明，而函数位于main()之后。
+在main函数前声明了函数原型后，一切ok.
+ 
+原因二：
+头文件的被循环引用，在引用时考虑清楚包含顺序
+ 
+原因三：
+头文件声明和定义参数稍有不同
+例：
+ 头文件中声明 void Hanlder(const char * buf);
+ 在定义时写作 void Hanlder(char * buf);
+这是就会发生conflicting types for 错误问题
+
+===============
+2,assignment from incompatible pointer type [enabled by default]
+
+类型要强制转换。一般，{a,b,c}这样的结构体前面都要进行强制转换。
+
+===============
+3，把函数定义在头文件，明明多处调用，还是提示define not used？
+"Function defined but not used" warning is only issued for functions with internal linkage
+这个warning只会出现在static修饰的函数。
+These functions are only accessible in one translation unit, so the compiler always knows whether they are used (in the program) or not. If you don't reference these functions in their translation unit, these functions are known to be unused, and the warning is generated.
+这些static函数只能在一个调用单元里被调用，那么，换言之，只要检测这些函数所在的文件是否有调用这些函数，就知道这些函数是否被使用。
+所以，XXX.h自身文件里因为没有调用语句，而导致编译器认为，在这个文件里，只有定义没有使用。static限定了这些函数被调用时仅能被此文件调用，所以，检测此文件就能确定这些函数是否被调用。而头文件里定义的这些static函数并没有被此头文件自身调用，故是只定义没引用。C99里在static后加inline可以消去这个warning，大概因为inline在编译器看来，并不属于真正的函数。
+那么，将static去掉如何呢？去掉就会导致函数重定义！
+1，包含此头文件的文件copy一份，没有static则表示是全局函数，那么这是第一次。
+2，此头文件自身也是独立的，它自身的定义也是有效的，于是，这是第二次。
+即，头文件里，包含此头文件的文件里都具有同样的函数体！这就导致函数重定义！
+可见，在头文件里定义函数，必须使用static关键字！ （同理，头文件里定义的变量，也是同样的道理！是copy，不加static也会导致重命名错误，加static则是多副本）
+
+所以，这个warning的解决方案仅有4个：
+1，忽略此warning，在gcc编译选项里加-Wno-unused-function
+2，declare the function with __attribute__((unused)) 
+3，改为static inline (仅C99)
+4，还是放回到c文件里定义吧。
+
+
+Since your variable is declared in a header file as 'static', each
+translation unit that includes that header file will get its own "copy"
+of this variable. Maybe in some of these translation units the variable
+is indeed not used, which causes the above warning to appear. It's just
+a guess though.
+
+当将一个函数定义放在头文件里，那么，除非是static inline修饰，否则，总会出现Function defined but not used 的警告！
+原因是，XXX.h被copy到被包含的c文件内，这是一份。XXX.h自身也是一份！ XXX.h自身那份会导致这个警告！   
+
+=================
+4，A label can only be part of a statement and a declaration is not a statement错误
+那是因为变量定义位置出现的错误。
+1，在switch的case里定义变量，要用括号括起已确定变量的作用范围。
+2，在goto的标签之后定义的变量也会错误。
+
+在case里面，用{}括起变量声明和使用过程即可。
+
+gcc中：
+在switch case中的变量定义在case中，或者使用goto语句有一个label，在这些label后定义一个变量都会报错：
+ a label can only be part of a statement and a declaration is not a statement
+
+这样是不是没有办法定义，只有在label前面定义后再使用。
+
+gcc编译报错: /usr/bin/ld: unrecognized option '--as-needed'这还能获得焦点嘛？在makefile中增加gcov的编译选项，编译后没有生成gcno文件。麻烦看看我是不是写错了，多谢！新手求教 源码<%%>这个标记的问题windows上面写的C在linux上面编译报错g++编译C代码出错lable如何在picturebox里的图片的居中位置显示关于C语言中switch与exit问题
+
+你在定义变量的地方和使用它之后的地方用大括号括起来就可以了。
+
+需要给他明确指个作用域
+
+你在定义变量的地方和使用它之后的地方用大括号括起来就可以了。
+
+需要给他明确指个作用域
+就是这样的！！！
+
+你在定义变量的地方和使用它之后的地方用大括号括起来就可以了。
+
+需要给他明确指个作用域
+
+另外需要注意一点,不要把变量定义在紧跟着switch {之后的地方.因为进入switch之后马上就执行其中的一个case了,不会去定义这些变量的.
+所以这次你没犯错,但是不保证以后你不犯.
+
+========================
+5，invalid storage class for function
+   造成这个错误，一般都是因为圆括号，括号不匹配，头文件里面声明不完整等等符号对不匹配造成的。
+   
+==========================
+6,ISO C++ forbids declaration of  VOID *
+    函数前没有返回值。
+==========================
+7，ISO C++ undefine reference XXX
+    c语言放在C++里不能连接问题。在头文件里添加#ifdef __cplusplus extern "C" { #endif #ifdef __cplusplus } #endif
+============================    
+8，relocation 0 has invalid symbol index 10
+/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o: In function `_start':
+(.text+0x20): undefined reference to `main'
+
+    原因是，makefile没有加入包含main的c文件。   
+============================   
+9，gcc的declaration does not declare anything 
+是一个很经典的问题
+有以下解决方案
+1.加上  -fpermissive
+2.修改相关头文件次序
+3.修改当前变量名   
+4，匿名结构体给予命名。
+
+=============================
+10，width of ‘start’ exceeds its type
+位域错误。
+
+=============================
+11，case label does not reduce to an integer constant
+你用的那个 case 接的不是一个常量表达式，switch是不能用于变量的！！
+你把case 后面接的改成 一个字符或者一个数字
+如果case里是变量，字符串常量等不是数值，不是字符，则会出现这种情况。
+这时，将case转换为if else即可。
+
+如： const int two = 2;
+     #define N (3)
+     switch (n) {
+     case 1:    //可以，因为是常量。
+     case two:  //不可以，因为是变量。只不过是只读变量，但始终不是常量！！
+     case N:    //可以，也是常量。
+     }
+

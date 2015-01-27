@@ -1,0 +1,67 @@
+字符串处理函数
+
+=============================================
+字符串处理函数里的形参char *一般都是指实参需要指向一块内存。
+字符串处理函数里的形参const char *指向的内存，以\0为结束点。如strcpy(str, "abc\0def");只复制了abc的值。
+
+字符串处理函数很多的参数是一个char * s1;
+比如：
+strcat(char * restrict s1, const char * restrict s2);
+strcpy(char * restrict s1, const char * restrict s2);
+
+这里，char * restrict s1 是一个字符指针，更重要的是，这是一个指向一块内存的指针！否则，这些函数将会出现运行时错误！
+
+C语言在这点上有些不足，就是不可以通过形参看出这个参数应该需要传入什么。然而，从另一方面来说，char * 参数的使用，基本上很少传入一个字符的地址。即它一般不会有传入char a的地址的情况。更多的都是char a[10];char *a = malloc(10);等一块内存的情况。
+
+换言之，在C语言的库函数里面，如果形参为char *一般都是指一段内存，而很少指一个字符！
+
+在个人的开发里，指向一段内存的指针一般使用unsigned char *或void *来表示。
+
+既然是字符串处理函数，那么字符串就是指一块内存块，所以参数自然就是一块内存块了！！！！！！！！！！
+
+===============================================
+字符串的确定。
+
+字符串的原则就是，遇到第一个\0就认为字符串已经结束，库里面所有字符串处理函数都遵循这个原则。
+
+实例： FILE *fopen(const char *path, const char *mode);
+ path = "./abc.txt"   		//OK
+ path = "./abc.txt\0aasf"   	//OK，因为是以\0定位结束的。
+ path = './abc.txt' 即不含\0的    //Fail,因为定位到的文件路径会是"./abc.txtXXX"，该路径文件当然是不存在，所以打开失败。
+ path = "./abc\0.txt"  		//Fail,因为定位到的文件路径是"./abc"
+
+同理的，几乎所有的形参为const char *都遵循这种原则。因为const char *形参一般就是指字符串。至少是以\0结束的一段内存。
+
+所以，一下这些字符串处理函数，或包含字符串的参数，都遵循这个原则。
+char *strcat(char *dest, const char *src);
+char *strncat(char *dest, const char *src, size_t n);
+
+char *strcpy(char * restrict s1, const char * restrict s2);
+char *strncpy(char * restrict s1, const char * restrict s2, size_t n);
+
+int strcmp(const char *s1, const char *s2);
+int strncmp(const char *s1, const char *s2, size_t n);
+
+size_t strlen(const char *s);
+
+反正，处理字符串的一个隐含条件就是，字符串的长度确定均以\0为结束。
+
+================================================
+一些函数的实现：
+   char*
+   strncat(char *dest, const char *src, size_t n)
+   {
+       size_t dest_len = strlen(dest);		//strlen也是字符串处理函数，所以，都是以\0确定结束位置的！不包含\0自身。
+       size_t i;
+
+       for (i = 0 ; i < n && src[i] != '\0' ; i++)
+           dest[dest_len + i] = src[i];
+       dest[dest_len + i] = '\0';
+
+       return dest;
+   }
+
+
+
+
+

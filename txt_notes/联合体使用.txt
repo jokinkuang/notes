@@ -1,0 +1,101 @@
+联合体使用
+1，联合体成员是使用同一段内存空间。成员包括普通成员，复合结构等都是共用一段内存空间。union{int a, struct b，struct c}; a和b和c共用一段内存！所以，要b和c都可以访问a，那么b，c里必须有一个成员c。因为联合的意思是，一次访问只能访问到联合成员里的其中一个。
+2，联合体的空间是内部成员的最大的成员的空间。
+3，改变一个成员，会影响另一个成员的值。 	
+	比如union{int a, char b};占用空间为4字节。 因为最大的成员是int。由于使用同一段内存，改变b的值，其实是修改了a的第一个字节的值。
+	比如union{int a, struct{int a; char b};};占用空间为5字节。 因为最大的成员是struct。由于使用同一段内存，改变a的值，其实就是改变了struct里面a的值。
+4，修改成员的值对内存里的值的影响可能要看编译器或大小端的影响。
+5，联合体和结构体一样，都可以使用=进行复制。
+
+
+
+例子1：  为了防止成员被融合。下面为了防止status和type被分配到一个空间，将它们放在一个结构体内。
+之所以这样处理，是为了可以直接访问。如 gitone_net_response.status gitone_net_response.type就可以轻松访问。
+前提是，这些成员比较少改动，因为它们每一个都要加入到reg，reg_check,heartbeat等以防止修改reg，reg_check,heartbeat等成员时覆盖了status和type的值。
+因为，不要忘记，联合体中的成员是共享一段内存的！ reg，reg_check和 {status, type}都是共享一段内存的。所以它们的前面的结构需要一致，才能避免被覆盖。
+
+struct gitone_phones_response {
+    gitone_net_status_code status;		//因为使用的是联合，共有属性都需要。
+    gitone_ops_type type;
+
+    //
+}; 
+
+union gitone_net_response {
+    struct {
+        gitone_net_status_code status;	//因为使用的是联合，为了status和type能同时被引用，需要将它们加到一个结构体里。
+        gitone_ops_type type;
+    };	//因为结构体没有声明变量名，则可以直接访问： gitone_net_response.status/.type
+
+    struct gitone_register_response reg;
+    struct gitone_register_check_response reg_check;
+    struct gitone_upload_pos_response upload_pos;
+    struct gitone_heartbeat_response hearbeat;
+    struct gitone_messages_response messages;
+    struct gitone_versions_response versions;
+    struct gitone_phones_response phones;
+};
+这个例子，在这种用法比较合理：parse_register_response((struct gitone_register_response *) transation->response);
+即要转换成另一个接口的时候。方便调用。
+
+
+例子2：  更切合伦理的设计。只是访问没有上面方便。都是更有优缺点的。即只是不同部分成为一个联合，相同部分作为一个结构体的属性。
+		使用结构体作为数据体。
+struct gitone_register_response {
+	char *confirm_code;
+}
+
+struct gitone_phones_response {
+	int phone_num;
+}; 
+
+struct gitone_net_response {
+
+    gitone_net_status_code status;		// 结构体，不会有上面联合那种情况，status和type都能正常访问。	
+    gitone_ops_type type;
+    
+	union {
+		struct gitone_register_response reg;
+		struct gitone_register_check_response reg_check;
+		struct gitone_upload_pos_response upload_pos;
+		struct gitone_heartbeat_response hearbeat;
+		struct gitone_messages_response messages;
+		struct gitone_versions_response versions;
+		struct gitone_phones_response phones;
+	};									// 因为联合体没有声明变量名，则可以直接访问： gitone_net_response.reg/.reg_check
+};
+
+发现，其实也没有访问时多点访问的困难问题。
+
+二，匿名和命名：
+struct gitone_pos_info {
+    gitone_pos_type type;
+    char date[GITONE_DATE_STR_LEN]; /* format: 2014-03-11 12:23:00 */
+    union {
+        struct gps_pos {
+            double lng;
+            double lat;
+        } gps;                      //命名，有些旧的编译器，匿名的无法访问。
+        struct cell_info {
+            unsigned int mnc;
+            unsigned int cell;
+            unsigned int lac;       //即使最后一个，也可以用标点。
+        } cell;
+    } u;
+};
+
+struct gitone_heartbeat_response {
+    gitone_net_status_code status;
+    int  tasks_num;
+    char **tasks;                   //指针的指针，可以是字符串数组，也可以是字符地址的指针。
+    struct gitone_date {
+        unsigned int year;
+        unsigned int month;
+        unsigned int day;
+        unsigned int hour;
+        unsigned int min;
+        unsigned int sec;
+    } date;
+};
+
+   有些旧的编译器，匿名的无法方法，因此需要命名。命名后，就不同直接访问，必须通过名字。（像mtk不支持匿名，但类linux的一般都支持。）

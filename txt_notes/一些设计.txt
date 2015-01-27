@@ -1,0 +1,390 @@
+一些设计：
+
+static const long
+   flag_next             = 1 << 0,	//下一个
+   flag_reproc           = 1 << 1,	//重做
+   flag_need_comma       = 1 << 2,
+   flag_seek_value       = 1 << 3, 
+   flag_escaped          = 1 << 4,
+   flag_string           = 1 << 5,
+   flag_need_colon       = 1 << 6,
+   flag_done             = 1 << 7,
+   flag_num_negative     = 1 << 8,
+   flag_num_zero         = 1 << 9,
+   flag_num_e            = 1 << 10,
+   flag_num_e_got_sign   = 1 << 11,
+   flag_num_e_negative   = 1 << 12,
+   flag_line_comment     = 1 << 13,
+   flag_block_comment    = 1 << 14;
+
+增加一个标记： flags |= flag_reproc;
+移除一个标记： flags &= ~ flag_reproc;
+检测一个标记： if (flags & flag_reproc) == true		
+
+标记都是并列关系。类似汇编的什么状态位，类似Windows的窗口样式标识等等。
+
+
+ static unsigned char hex_value (char c)
+ {
+    if (isdigit(c))
+       return c - '0';
+ 
+    switch (c) {
+       case 'a': case 'A': return 0x0A;
+       case 'b': case 'B': return 0x0B;
+       case 'c': case 'C': return 0x0C;
+       case 'd': case 'D': return 0x0D;
+       case 'e': case 'E': return 0x0E;
+       case 'f': case 'F': return 0x0F;
+       default: return 0xFF;
+    }
+ }
+
+解析一个字符代表的16进制的值：	‘9’ 返回 数值9
+					     ‘a’‘A’ 返回 0xA   即数值10
+
+
+flags &= ~ flag_seek_value;
+
+switch (b)
+{
+ case '{':
+
+    if (!new_value (&state, &top, &root, &alloc, json_object))
+       goto e_alloc_failure;
+
+    continue;
+
+ case '[':
+
+    if (!new_value (&state, &top, &root, &alloc, json_array))
+       goto e_alloc_failure;
+
+    flags |= flag_seek_value;
+    continue;
+
+ case '"':
+
+    if (!new_value (&state, &top, &root, &alloc, json_string))
+       goto e_alloc_failure;
+
+    flags |= flag_string;
+
+    string = top->u.string.ptr;
+    string_length = 0;
+
+    continue;
+
+ case 't':		//匹配“true”字符串
+
+    if ((end - i) < 3 || *(++ i) != 'r' || *(++ i) != 'u' || *(++ i) != 'e')
+       goto e_unknown_value;
+
+    if (!new_value (&state, &top, &root, &alloc, json_boolean))
+       goto e_alloc_failure;
+
+    top->u.boolean = 1;
+
+    flags |= flag_next;
+    break;
+
+ case 'f':		//匹配“false”字符串
+
+    if ((end - i) < 4 || *(++ i) != 'a' || *(++ i) != 'l' || *(++ i) != 's' || *(++ i) != 'e')
+       goto e_unknown_value;
+
+    if (!new_value (&state, &top, &root, &alloc, json_boolean))
+       goto e_alloc_failure;
+
+    flags |= flag_next;
+    break;
+
+ case 'n':		//匹配“null”字符串
+
+    if ((end - i) < 3 || *(++ i) != 'u' || *(++ i) != 'l' || *(++ i) != 'l')
+       goto e_unknown_value;
+
+    if (!new_value (&state, &top, &root, &alloc, json_null))
+       goto e_alloc_failure;
+
+    flags |= flag_next;
+    break;
+
+ default:
+
+==============================
+   #运算符是将宏的一个参数转换为字符串字面量。  宏的参数！    即是参数宏里面的参数！  是将参数直接作为字符串！！不用运算！！
+   如，#define PRINT(n) printf(#n " = %d\n", n);
+        PRINT(i/j) 将等于 printf("i/j"" = %d\n", n); 等价于 printf("i/j = %d\n", n);   //字符串是"i/j"，而不是它的表达式结果！
+ 
+   ##运算符是将两个记号（如标识符）粘合到一起，成为一个新的记号。  
+   如，#define MK_ID(n) i##n
+        int MK_ID(1),MK_ID(2),MK_ID(3)就变为了 int i1，i2，i3;
+       #define FLAG(n) n##FLAG
+        FLAG(READ),FLAG(WRITE)就变为了READFLAG，WRITEFLAG
+	   #define GENERIC_MAX(type) \
+                type type##_max(type x, type y) \
+				{								\
+					return x > y ? x : y;		\
+				}
+
+    应用： 枚举的FLAG 对应 字符串
+    简单法：
+	  enum device_flag {		// 也可以 typedef enum { .. } device_flag;
+         DEVICE_NORMAL,
+		 DEVICE_GPIO,
+         DEVICE_FILE,
+         DEVICE_IIC,		//   C99,这里的逗号可有可无！！
+      };
+	  #define DEVICE_FLAG_TO_STRING(flag) #flag
+
+	  这样，DEVICE_FLAG_TO_STRING(DEVICE_NORMAL) 就变为 "DEVICE_NORMAL"字符串
+      但是，string_to_device_flag就比较麻烦。
+
+    复杂法：
+枚举：
+ #define DEFINE_FLAG(flag) DEVICE_##flag,		//拼凑 标识符  注：这里不是字符串。#define FLAG(flag) flag,     和下面不同。
+ typedef enum DeviceType {
+     DEVICE_TYPE_LIST(DEFINE_FLAG)
+     _DEVICE_TYPE_MAX,
+     _DEVICE_TYPE_INVALID = -1
+ } DeviceType;
+ #undef DEFINE_FLAG
+
+	  #define FLAG_NAME(flag)    #flag,				//注，这里的逗号不是逗号语句！ 而是宏里的一部分！ 其实，逗号可以放在下面。放在这里只是为了隐藏。
+	  static const char * _DEVICE_TYPE_NAMES[] = {
+		   DEVICE_TYPE_LIST(FLAG_NAME)
+	  };
+	  #undef FLAG_NAME
+                                                                注：这里是字符串！ #define FLAG(flag) #flag,        这就是为什么define完后立即解除，因为这里使用了同一个宏表示两个东西，所以，在用完后就释放宏标识符，让另一个用。
+	  #define DEVICE_TYPE_LIST(n) \			//传入的参数也是一个宏。 FLAG_NAME
+              n(NORMAL)	\					//其实，就变成了FLAG_NAME(NORMAL), 也就变成了 "NORMAL", 逗号是宏的作用。
+              n(GPIO)	\					//其实，就变成了FLAG_NAME(GPIO), 也就变成了 "GPIO",      
+              n(FILE)	\
+			  n(IIC)	\					//其实，逗号可以放在这里： n(IIC), \
+          
+于是，_DEVICE_TYPE_NAMES[] = {
+		"NORMAL",
+        "GPIO",
+	    "FILE",
+        "IIC",
+	 }
+
+所以，对于字符串转枚举类型，就有了
+     enum device_flag string_to_device_flag(string)
+     for (i = 0; i < DEVICE_MAX, i++) {
+     	if (strcasecmp(_DEVICE_TYPE_NAMES[i], string) == 0) {
+			return i;
+        }
+     }
+     return _DEVICE_TYPE_INVALID;
+
+
+思路：
+	主要是利用参数进行分发。
+	#define DEVICE_LIST(n) n(NORMAL),n(GPIO),n(IIC)		//DEVICE_LIST是入口，通过参数指配一个函数。 
+    所以，n是 printf，则变为printf(NORMAL),printf(GPIO),printf(IIC);
+		 n是 FLAG_NAME,则变为宏 FLAG_NAME(NORMAL),FLAG_NAME(GPIO),FLAG_NAME(IIC) 
+    若#define FLAG_NAME(n) DEVICE_##n##_FLAG  则变为 DEVICE_NORMAL_FLAG,DEVICE_GPIO_FLAG
+    若#define FLAG_NAME(n) #n#_FLAG 则变为"NORMAL_FLAG","GPIO_FLAG"
+    若#define FLAG_NAME(n) n(NORMAL),n(GPIO),n(IIC) 则又会变为 NORMAL(NORMAL),GPIO(GPIO)...
+
+逆推：
+	一般而言，先写出目标格式。
+    然后，根据目标格式相同的部分，抽离成为一个宏。
+    如果宏还具有相同部分，还可以再抽离成为另一个宏。
+    如果另一个宏还有相同部分，还可以再抽离...
+    以此类推。
+    
+主要通过宏来创建两个列表： 枚举变量名列表。数组字符串列表。
+
+举个例子： 
+#define BOARD_TYPE(type) type,              //有逗号，是枚举变量名
+#define BOARD_TYPE_STRING(type) #type,      //有逗号，是字符串, 且字符串是“SOM35X_B2”大写形式！！所以比较时，采用不分大小写比较。
+
+#define BOARD_TYPE_LIST(to_name_or_str) \
+    to_name_or_str(SOM35X_B2)  \
+    to_name_or_str(SOM37X_B1)  \
+    to_name_or_str(SBC35X_A2)  \
+    to_name_or_str(EVM35X_A3)  \
+    to_name_or_str(EGS37X_B1)  \
+    to_name_or_str(SOM335X_A1) \
+    to_name_or_str(IPC335X_A3) \
+    to_name_or_str(EVM335X_A2) 
+    
+typedef enum {
+    BOARD_TYPE_LIST(BOARD_TYPE)             //枚举，使用的是变量名
+    BOARD_TYPE_MAX,
+    BOARD_TYPE_INVALID = -1
+} board_type;
+
+static const char *_BOARD_TYPE_NAMES[] = { 
+    BOARD_TYPE_LIST(BOARD_TYPE_STRING)      //数组，使用的是字符串，最后一个有多余的逗号！！！
+};
+#undef BOARD_TYPE_STRING                    //使用完，可以立即释放掉。当然也可以不释放。
+
+board_type get_board_type();
+board_type get_board_type_by_string(const char *name);
+const char * get_board_string_by_type(board_type type);
+
+board_type get_board_type_by_string(const char *name) {
+    int i;
+    for (i = 0; i < BOARD_TYPE_MAX; i++) {
+        if (strcasecmp(name, _BOARD_TYPE_NAMES[i]) == 0)  //不区分大小写比较。
+            return i;
+    }   
+}
+
+const char * get_board_string_by_type(board_type type) {
+    if (type < 0 || type >= BOARD_TYPE_MAX)     //超出范围，返回NULL
+        return NULL;
+    return _BOARD_TYPE_NAMES[type];
+}
+
+可以用 gcc -o XXX.h.i -E XXX.h 来查看预处理后的文件。
+===================================================
+循环队列：
+注： 循环队列判断空与满： 因为空和满都指向同一个位置，所以，方式有2种，1是增加一个标记位，2是损失一个单元。换言之，当rear指向最后一个单元时，就认为满了，最后一个单元不存储数据。
+【循环队列在插入时也要判断其是否已满，删除时要判断其是否已空。为空的条件比较简单当头部指示器和尾部指示器指向同一个位置时表示循环队列为空；因为尾部 指示器指示的是最后一个元素的下一个位置，所以循环队列已满时头部指示器和尾部指示器也指向同一个位置，为了区分这两种状况有两种方法，一种增加一个标识 变量来区分，另一种损失循环队列中的一个元素，即头和尾之间的位置不用，此时循环队列为满的条件变成头部指示器加1等于尾部指示器；为空的条件成为头部指 示器和尾部指示器指向同一位置。】
+is_empty() {
+    if(q->front == q->rear) //判空  
+        return 1;  
+    else  
+        return 0;
+}
+is_full() {
+    if(q->front == (q->rear+1) % MAXSIZE) //判满s  最后一个单元不使用。
+        return 1;  
+    else  
+        return 0;  
+}
+
+
+1，要通过函数来修改结构体，如循环队列里面的标记。要传入结构体指针！ 下面的都需要将.改为指针！ 下面是无法修改queue队列的值的！必须传入的是queue指针！！
+2，如果你要隐藏queue结构体，那么一定不能使用栈空间，因为不完整类型是无法声明变量的！不完整类型只能用于指针声明，且要靠模块内动态分配内存。否则是无法使用不完整类型！
+    当然，如果使用C99的灵活数组可能可以做到！
+   对于不完整类型，你是不可能声明其成为一个栈普通变量，而只能是指针变量，这导致，这个不完整类型需要通过接口实现（这个接口知道这个不完整类型）。那么，思路就只有通过该接口返回一个指针（返回变量不行，都说不完整类型在外部是不能声明为变量，即使你能够返回一个变量，但是外部接收时无法用变量来接收，因为根本无法声明这样一个变量）。而对于指针，可以返回的只有： 1，静态变量。2，动态分配的堆内存。
+   如果你使用静态变量，那么，该模块是单例的！因为每个文件调用这个模块的时候，都共享同一个静态变量。
+   如果你希望是多例的，那么，只能使用动态分配的内存的方法，并且通过参数传入要操作的实际模块。这样，该模块才是多例的！
+   我们希望循环队列是多例的，但是，由于平台的限制，我们不能使用动态分配内存，那么，我们只能放弃隐藏结构体了，即放弃使用不完整类型。暴露该结构，在栈空间里声明这结构体，然后将地址传入模块，让模块处理，修改结构体的内容，达到我们想要的功能。
+     
+3，循环队列，在递增，递减，求两点逻辑距离，长度等，一般都需要加上长度再对长度求余。queue.nodes[(queue.front + QUEUE_LEN- 1) % QUEUE_LEN].pos_info;
+4，递增： 从前标i开始递增(i + 1) % QUEUE_LEN;
+   递减： 从后标j开始递减(i - 1 + QUEUE_LEN) % QUEUE_LEN;    // 直接是 (i - 1) % QUEUE_LEN如何？ 这要看对负值的求余如何实现了！！ 在gcc下测试了 -1 % 10 == -1，所以，加上QUEUE_LEN才正确。str[1] = str + 1; str[-1] = str - 1;
+   长度： (queue->rear - queue->front + QUEUE_LEN) % QUEUE_LEN;
+   
+   其实，如果结果可能是负值，则加上QUEUE_LEN再对QUEUE_LEN求余。如果结果保证是正数，则可以直接对QUEUE_LEN求余。
+
+   递增的时候，都是 +1，然后对QUEUE_LEN求余。
+    如，
+   增加一个元素： bool insert(CirQueue *Q, QElementType e);
+         //判断队列是否已满  
+        if ((Q->rear+1)%MAX_SIZE == Q->front)  
+            return false;  
+        Q->base[Q->rear] = e;  
+        Q->rear = (Q->rear + 1) % MAX_SIZE;  
+        return true;  
+   删除一个元素： bool pop(CirQueue *Q, QElementType *e);
+        if (Q->front == Q->rear)  
+        return false;  
+        *e = Q->base[Q->front];  
+        Q->front = (Q->front + 1) % MAX_SIZE;  
+        return true;  
+   删除的时候，返回值为bool比较好，因为当元素为空的时候，返回的是NULL，但是这要求返回值是指针，如果返回的元素不是指针类型，就不合适了。所以，返回bool表示操作是否成功比较好。
+5，遍历的时候，使用for是很麻烦的，相比，while显得很容易，因为这是不知道边界的。
+    for (i = queue.front; i < queue.rear; i++) {
+          printf("%f %f %s\n", queue.nodes[i].pos_info.x, queue.nodes[i].pos_info.y, queue.nodes[i].pos_info.date);
+    }	
+    上面的遍历是错误的。
+    用while就简单很多。因为这是条件型的循环。
+    void PrintCirQueue(CirQueue *Q)  
+    {//打印队列  
+    if (IsEmptyCirQueue(Q))  
+        return;  
+    printf("the Queue is:");  
+    int i = Q->front;  
+    while (i != Q->rear)  
+    {  
+        printf("%d ",Q->base[i]);  
+        i = (i+1)%MAX_SIZE;  
+    }  
+    printf("/n");  
+
+6，优先级的循环队列问题：
+    1，有优先级的循环队列本身已经有序，可以利用这一特性。
+    2，当队列为空时，无需对比优先级，直接插入即可。
+    3，当队列不为空，对比优先级，标记要插入的位置。
+    4，将要插入的位置及其后面所有元素后移一个位置。
+       我的实现是：
+        遍历找到插入的位置。
+        i = queue->front;
+        while(i != queue->rear) {
+            if (queue->nodes[i].priority < priority)
+                break; 
+            i = (i + 1) % QUEUE_LEN; 
+        }
+
+        // i是要插入的位置。 循环用于移动 i 后面的元素，不包含 i 自身。如果要插入的位置是尾部，循环不会被执行。
+        j = queue->rear;
+        while(j != i) {
+            queue->nodes[(j + 1) % QUEUE_LEN] = queue->nodes[j];
+            j = (j - 1 + QUEUE_LEN) % QUEUE_LEN;
+        }
+        //要插入的位置的元素后移，保存。
+        queue->nodes[(i + 1) % QUEUE_LEN] = queue->nodes[i]; /* it sometimes does not make sense */
+        
+        //插入新的元素到结点i    如果上面一句不执行，原来的结点i里的数据就被本次覆盖了。
+        queue->nodes[i].priority = priority;
+        queue->nodes[i].pos_info = pos_info;
+        queue->rear = (queue->rear + 1) % QUEUE_LEN;
+        //修改队列长度增1.
+        
+       按理是，如果i是队列尾，那么可以不用移动，所以，最后一句是没有意义的，而且是浪费的。
+              如果i是队列中，那么，因为循环处理包含处理要插入的结点比较麻烦，所以，最后一句就是移动要插入的位置的结点后移。
+       如果在while里面判断 j 是否等于 i ，然后处理，并且退出循环，也行。
+    5，为什么最后一句不执行，程序会很异常呢？ 明明只是放弃了一个元素。
+       哈哈，当然会很异常了！ 这样的意思是，每次都替换上一个元素。 本来最后一句是用于保存上一个元素的，将其后移，现在你不后移直接就覆盖了，那么，队列里就只有当前新插入的元素。而且每一次都被新插入的元素替换掉！但是，每一次插入都修改了队列长度，所以，程序运行过程只发现队列递增了，而数据没有递增。因为数据每次都被替换了。
+    
+最后还有一个问题，那就是，干嘛用循环队列呢？
+循环队列的话，只需在insert的时候要遍历，而pop的时候不需要，仅需要修改2个值。如果固定数组头部是队列头，性能不优。    
+双向链表实现循环队列或使用数组。list.h本身就是一个循环队列，所以可以不用记录i和j什么的。链表头就是优先级最高的。因为链表直接移除即可。
+    
+==================================
+    
+有时候，一些数据只有几个范围，这个时候可以用数组来表示这些范围。
+如，int a[] = {9, 99, 999, 9999, 99999, 999999, 9999999}来进行区域判断。
+
+==================================
+
+Java里面，一些字符串其实可以不用驼峰法，而采用这样： "Login.deviceId" "User.name"等等变量名。
+
+==================================
+/** search substring from end of a string */
+ 45 static char * strstr_rev(char *source, const char *match) {
+ 46     for(int i = strlen(source); i >= 0; i--) {
+ 47         if(source[i] == match[0] && strncmp(source + i, match, strlen(match)) == 0) 
+ 48             return source + i;
+ 49     }
+ 50     return NULL;
+ 51 }
+
+
+====================================
+printf的宏定义
+
+ 16 #define FLUSH_IN        (0)
+ 17 #define FLUSH_OUT       (1)
+ 18 #define FLUSH_BOTH      (2)
+ 19     
+ 20 #define E_UART_DEBUG(uart, ...)     printf("[uart %s] ", uart->devicePath); \
+ 21                     printf(__VA_ARGS__); \
+ 22                     printf("\n");
+ 23 
+    
+======================================    
+    
+    
+    
+    
+    
+    
