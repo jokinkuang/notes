@@ -14,7 +14,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define SERVERPORT 4950    // the port users will be connecting to
+#define SERVERPORT 3562     // the port users will be connecting to
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
         perror("sendto");
         exit(1);
     }
-
     printf("sent %d bytes to %s\n", numbytes, inet_ntoa(their_addr.sin_addr));
 
     close(sockfd);

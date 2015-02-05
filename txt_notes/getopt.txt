@@ -1,0 +1,34 @@
+getopt
+1,optind。
+  optind和argc的顺序是不同的，下面的例子的输出可以说明：
+  getopt会将参数进行排序。
+    printf("argv1 %s argv2 %s argv3 %s\n", argv[1], argv[2], argv[3]);
+
+    int opt;
+    while ((opt = getopt(argc, argv, "d:gh")) != -1) {
+        switch (opt) {
+            case 'd':
+                input_device = optarg;
+                break;
+            case 'g':
+                //debug_mode = 1;
+                break;
+            case 'h':
+            default: /* '?' */
+                usage(stderr, argv[0]);
+                exit(1);
+        }   
+    }   
+    /* optind is the index of the next element to be processed in argv.
+     * The system initializes this value to 1. */
+    printf("argv1 %s argv2 %s argv3 %s\n", argv[1], argv[2], argv[3]);
+    if (optind >= argc) {
+        fprintf(stderr, "lack of keycode at the end\n");
+        exit(1);
+    }   
+    keycode = atoi(argv[optind]);
+
+   命令： XXX 100 -d a
+   输出：
+        argv1 100 argv2 -d argv3 a
+        argv1 -d argv2 a argv3 100  //getopt后，参数列表顺序发生了改变！
