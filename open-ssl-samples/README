@@ -1,0 +1,26 @@
+Secure Programming with the OpenSSL API, Part 1: Overview of the API
+ReadMe - updated May 16, 2006
+
+Source files:
+  - nossl.c        - Demo on OpenSSL for basic communication without using SSL
+  - withssl.c      - Demo on OpenSSL for an SSL connection
+  - TrustStore.pem - Certificate file needed by withssl.c
+
+This source code has been last tested on OpenSSL 0.9.8b (released May 4, 2006)
+on a SuSE 10.0 system running through VMWare Server Beta. The source code was
+last modified July 6, 2004.
+
+If you have any problems with this source code, please send a detailed e-mail
+outlining your problem, including any compiler or run-time error messages, to 
+kballard@kennethballard.com. There have been a lot of comments sent into IBM 
+developerWorks regarding compiler or run-time issues with this accompanying 
+source code, none of which are detailed, and none with any contact 
+information.
+
+WARRANTY
+
+This source code is provided "as-is" without any warranty of any kind,
+including the implied warranties of merchantability or fitness for any purpose.
+This code is intended to be used for *demonstration purposes only*, and should
+not be used or incorporated into any mission-critical application.
+
