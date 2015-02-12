@@ -16,6 +16,10 @@ int main()
     char * request = "GET / HTTP/1.1\x0D\x0AHost: www.verisign.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
     char r[1024];
 
+    /* Init SSL library */
+
+    SSL_library_init();
+
     /* Set up the library */
 
     ERR_load_BIO_strings();
@@ -24,7 +28,19 @@ int main()
 
     /* Set up the SSL context */
 
-    ctx = SSL_CTX_new(SSLv23_client_method());
+    const SSL_METHOD *method = SSLv23_client_method();	/* SSLv3 but can rollback to v2 */
+    if (! method) {
+        printf("ssl client method failed\n");
+        return 1;
+    }
+    printf("Method version: %d\n", method->version);
+
+    ctx = SSL_CTX_new(method);
+    if (! ctx) {
+        printf("ssl context is NULL\n");
+        ERR_print_errors_fp(stderr);
+        return 1;
+    }
 
     /* Load the trust store */
 
