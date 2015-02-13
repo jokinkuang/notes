@@ -10,7 +10,8 @@ int main()
     BIO * bio;
     int p;
 
-    char * request = "GET / HTTP/1.1\x0D\x0AHost: www.verisign.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
+    //char * request = "GET / HTTP/1.1\x0D\x0AHost: www.verisign.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
+    char * request = "GET /cas/login?service=https%3A%2F%2Fweb.corp.ema-tech.com%3A8888%2F HTTP/1.1\x0D\x0AHost: web.corp.ema-tech.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
     char r[1024];
 
     /* Set up the library */
@@ -21,7 +22,8 @@ int main()
 
     /* Create and setup the connection */
 
-    bio = BIO_new_connect("www.verisign.com:80");
+    //bio = BIO_new_connect("www.verisign.com:80");
+    bio = BIO_new_connect("web.corp.ema-tech.com:8888");
     if(bio == NULL) { printf("BIO is null\n"); return; }
 
     if(BIO_do_connect(bio) <= 0)
