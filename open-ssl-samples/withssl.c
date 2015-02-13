@@ -13,9 +13,12 @@ int main(int argc, char *argv[])
 
     int p;
 
-    //char * request = "GET / HTTP/1.1\x0D\x0AHost: worktile.com\x0D\x0A\x43 connection: Close\x0D\x0A\x0D\x0A";
-    //char * request = "GET / HTTP/1.1\x0D\x0AHost: www.verisign.com\x0D\x0A\x43 connection: Close\x0D\x0A\x0D\x0A";
-    char * request = "GET /cas/login?service=https%3A%2F%2Fweb.corp.ema-tech.com%3A8888%2F HTTP/1.1\x0D\x0AHost: web.corp.ema-tech.com\x0D\x0A\x43 connection: Close\x0D\x0A\x0D\x0A";
+    //char * request = "GET / HTTP/1.1\x0D\x0AHost: worktile.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
+    //char * request = "GET / HTTP/1.1\x0D\x0AHost: www.verisign.com\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A";
+    char * request = "GET /cas/login?service=https%3A%2F%2Fweb.corp.ema-tech.com%3A8888%2F HTTP/1.1\x0D\x0AHost: web.corp.ema-tech.com\x0D\x0A""Connection: Close\x0D\x0A\x0D\x0A";
+    // \x43 == C
+    // \x0DC is hex value
+    // "\x0D""C" can avoid upper problem
     char r[1024];
 
     /* Init SSL library */
@@ -67,8 +70,8 @@ int main(int argc, char *argv[])
 
     /* Create and setup the connection */
 
-    //BIO_set_conn_hostname(bio, "www.verisign.com:https");
     //BIO_set_conn_hostname(bio, "worktile.com:https");
+    //BIO_set_conn_hostname(bio, "www.verisign.com:https");
     BIO_set_conn_hostname(bio, "web.corp.ema-tech.com:8888");
 
     if(BIO_do_connect(bio) <= 0)
