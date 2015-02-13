@@ -1,0 +1,22 @@
+java:
+    javac InstallCert.java  # it may need download from web
+    java InstallCert worktile.com:443  # default pass phrase: changeit
+    # save alias as worktile.com-1, then the -alias just mean this name
+    keytool -list -rfc -keystore ./jssecacerts -storepass changeit
+    keytool -help
+    keytool -list -help
+    keytool -list -v -alias worktile.com-1 -keystore ./jssecacerts -storepass changeit
+
+openssl:
+    openssl s_client -showcerts -connect worktile.com:https < /dev/null > web.pem
+    # it always return following verify code, but the pem files is avaliable actually!
+    # Verify return code: 19 (self signed certificate in certificate chain)
+
+webs:
+    http://stackoverflow.com/questions/7885785/using-openssl-to-get-the-certificate-from-a-server
+    https://www.madboa.com/geek/openssl/
+    # OpenSSL Command-Line 
+    http://support.citrix.com/article/CTX106631
+    # How to Use OpenSSL to Convert Certificates Between PEM and DER
+
+
