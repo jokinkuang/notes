@@ -34,3 +34,6 @@ maybe you can use this way to pass your passwork
     openssl -h
     openssl aes-256-cbc -h
 
+4, notes
+    AES-encrypt make different output encrypted strings every time, even with the same password. it means that, a password can descrypt a lot of strings.
+
