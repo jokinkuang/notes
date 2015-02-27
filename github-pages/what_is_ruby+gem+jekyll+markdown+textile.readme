@@ -1,0 +1,44 @@
+Title: what is ruby gem jekyll markdown textile
+Author: helloxk
+Mail: 345106552@qq.com
+Created: 2015-02-27 16:08:54
+Modified: 2015-02-27 16:20:50
+
+Urls:
+    ruby+perl+python: http://www.danvk.org/josephus.html
+    gem: http://guides.rubygems.org/what-is-a-gem/
+    jekyll: http://jekyllrb.com/
+    markdown: http://daringfireball.net/projects/markdown/
+    textile: http://redcloth.org/textile
+
+1, what is ruby ?
+    ruby is an open-source, dynamic, reflective, object-oriented, general-purpose programming language.
+    just like perl and python.
+
+2, what is gem ?
+    gem is base on ruby.
+    maybe can just see a gem as a ruby plugin, a ruby extention package.
+
+3, what is jekyll ?
+    jekyll is base on ruby. jekyll is a gem.
+    jekyll transform plain text, formated by html, markdown or textile into static html sites.
+
+4, what is markdown?
+    markdown is a markup language. it may be implemented in other languages not only in ruby.
+    Markdown is a text-to-HTML conversion tool for web writers. Markdown allows you to write using an easy-to-read, easy-to-write plain text format, then convert it to structurally valid XHTML (or HTML).
+    file suffix: *.markdown *.md
+
+5, what is textile?
+    textile is a markup language. it may be implemented in other languages not only in ruby.
+    textile is just like markdown, it is another tool for web writers. Textile is a simple text markup language.
+    file suffix: 
+
+6, an other text markup language: liquid
+
+7, others base on ruby:
+    sass, a markup file used to convert to css file.
+    rails, a web website development framework. 
+
+Because textile is more easier to read in plain text mode, so I use textile to write the blogs.
+It is easy to learn how to use the languages in their official websites.
+
