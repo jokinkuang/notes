@@ -8,6 +8,7 @@ Urls:
     ruby+perl+python: http://www.danvk.org/josephus.html
     gem: http://guides.rubygems.org/what-is-a-gem/
     jekyll: http://jekyllrb.com/
+    install jekyll: https://help.github.com/articles/using-jekyll-with-pages/
     markdown: http://daringfireball.net/projects/markdown/
     textile: http://redcloth.org/textile
 
@@ -22,6 +23,16 @@ Urls:
 3, what is jekyll ?
     jekyll is base on ruby. jekyll is a gem.
     jekyll transform plain text, formated by html, markdown or textile into static html sites.
+
+    install (ubuntu 12.04.5):
+    - sudo apt-get install ruby1.9.3    # jekyll need ruby >= 1.9.1
+    - sudo gem install jekyll       
+    - sudo apt-get install nodejs   # fix the execj gem error, execj is in nodejs
+    - jekyll new my-test-site
+    - cd my-test-site
+    - jekyll server     # now browse to 127.0.0.1:4000
+
+    also, maybe you can refer to https://help.github.com/articles/using-jekyll-with-pages/
 
 4, what is markdown?
     markdown is a markup language. it may be implemented in other languages not only in ruby.
