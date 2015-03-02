@@ -34,17 +34,19 @@ Urls:
 
     also, maybe you can refer to https://help.github.com/articles/using-jekyll-with-pages/
 
-4, what is markdown?
+4, what is Liquid ?
+    Liquid is a render language.
+    usually, jekyll use Liquid as its renderer. focus on how to show the posts.
+
+5, what is markdown ?
     markdown is a markup language. it may be implemented in other languages not only in ruby.
     Markdown is a text-to-HTML conversion tool for web writers. Markdown allows you to write using an easy-to-read, easy-to-write plain text format, then convert it to structurally valid XHTML (or HTML).
     file suffix: *.markdown *.md
 
-5, what is textile?
+6, what is textile ?
     textile is a markup language. it may be implemented in other languages not only in ruby.
     textile is just like markdown, it is another tool for web writers. Textile is a simple text markup language.
     file suffix: 
-
-6, an other text markup language: liquid
 
 7, others base on ruby:
     sass, a markup file used to convert to css file.
