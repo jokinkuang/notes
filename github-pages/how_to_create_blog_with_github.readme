@@ -7,6 +7,7 @@ Modified: 2015-02-27 17:55:50
 Urls:
     help: https://help.github.com/
     if push failed see: https://help.github.com/articles/generating-ssh-keys/
+    add ssh-keys: https://help.github.com/articles/generating-ssh-keys/#step-4-add-your-ssh-key-to-your-account
     bind domain: https://help.github.com/articles/setting-up-a-custom-domain-with-github-pages/
     jekyll sites: https://github.com/jekyll/jekyll/wiki/sites
 
