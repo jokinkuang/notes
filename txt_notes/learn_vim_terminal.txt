@@ -23,6 +23,9 @@ visual mode ==    auto indent 自动缩进 (选择后，直接按键盘==，而�
 //全选，自动缩进： shift + 0  ==
 command mode: n==  n lines indent with upper 多行自动缩进
 
+multi line edit:
+    ctrl+v, then j,k,i,I,a,A,o, and so on for edit the multi line
+
 ===========================================
 编辑： AIRS  append,insert,replace,subsitute (replace是单个替换，subsitute是单个替换，并进入插入模式，所以方便下，可以统一用s就好)
 大写字母是shift+字母。

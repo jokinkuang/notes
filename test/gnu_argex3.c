@@ -69,9 +69,8 @@ static char args_doc[] = "ARG1 ARG2";
 static struct argp_option options[] = {
   {"verbose",  'v', 0,      0,  "Produce verbose output" },
   {"quiet",    'q', 0,      0,  "Don't produce any output" },
-  {"silent",   's', 0,      OPTION_ALIAS },
-  {"output",   'o', "FILE", 0,
-   "Output to FILE instead of standard output" },
+  {"silent",   's', 0,      OPTION_ALIAS }, /* means merge with upper quiet option */
+  {"output",   'o', "FILE", 0, "Output to FILE instead of standard output" },
   { 0 }
 };
 
