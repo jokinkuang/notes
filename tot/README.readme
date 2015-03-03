@@ -1,0 +1,19 @@
+1, what is tot ?
+    Text2Textile: transform normal plain text to textile markup text
+
+2, how to do ?
+    tot [options] <SOURCE file|folder> [DEST folder]
+
+    options:
+    -r, -R, --recursive
+        transform recursive
+    -h, -help, --help
+        get help
+
+3, do what ?
+    - auto generate filename as DATE-filename.textile
+    - auto generate text property in file
+    - auto generate textile by the plain text whick only contains identations 
+    - auto fix the wrong sequence num
+
+
