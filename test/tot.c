@@ -20,6 +20,8 @@ static struct argp_option options[] = {
        key, short key, -k
        arg, the required arg after the key, -k XXX
        doc, description doc,
+       If not set, it is C initialization and auto set to default value.in static
+       they are set to Zero, but not in local variable initialization.
        SEE http://gnu.april.org/software/libc/manual/html_node/Argp- Option-Vectors.html
      */
 
@@ -75,8 +77,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         break;
     case 'h':
     case ARGP_KEY_NO_ARGS:
-        //argp_state_help(state, stderr, ARGP_HELP_STD_HELP); 
+        argp_state_help(state, stderr, ARGP_HELP_STD_HELP); 
         /* SEE /usr/include/argp.h __argp_usage() */
+        /* Attention: 
+         * once show a help, the program would exit directly from here ! */
         break;
     case ARGP_KEY_ARG:
         /* use this to force to stop the parser and return, 
@@ -151,6 +155,8 @@ static struct argp myargp = {options, parse_opt, args_doc, doc};
 
 int main (int argc, char **argv) {
     struct arguments myarguments;
+
+    printf("== You can use: %s 1 2 3 4 to test ==\n", argv[0]);
 
     /* default */
     myarguments.is_recursive = false;
