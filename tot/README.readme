@@ -2,13 +2,15 @@
     Text2Textile: transform normal plain text to textile markup text
 
 2, how to do ?
-    tot [options] <SOURCE file|folder> [DEST folder]
+    tot [options] <SOURCE file|folder> <DEST folder>
 
     options:
+    -f, --force 
+        if an existing destination file cannot be opened, remove it and try again
     -r, -R, --recursive
-        transform recursive
+        transform directories recursively
     -h, -help, --help
-        get help
+        show help
 
 3, do what ?
     - auto generate filename as DATE-filename.textile
@@ -16,4 +18,9 @@
     - auto generate textile by the plain text whick only contains identations 
     - auto fix the wrong sequence num
 
+4, modules
+    - text analysis
+    - file read/write
+    - folder read/write
+linux不会记录文件创建时间，除非创建之后没有修改过，那么创建时间就是最后修改的时间。
 

@@ -8,11 +8,20 @@ sudo su     login with the root account
 
 search:
 sudo find /usr/ -name openssl  //目录 名字
+find -name "*.txt"
 
+updatedb
+locate filename
+
+search and delete:
+find -name "*.txt" | xargs rm
 
 service:
 /etc/init.d/XXX start/stop/restart
 service XXX start/stop/restart
+
+find files which are modified 54 days ago:
+sudo find / -mtime 54 -name "*.png" > find.txt
 
 startup:
 /etc/lightdm/lightdm.conf    //登录界面设置
