@@ -140,8 +140,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case ARGP_KEY_END:
         printf("-End | argc:%d argnum:%d next:%d => you can see next is unchanged and equal with argc\n",
                state->argc, state->arg_num, state->next);
-        //if (state->arg_num < args_num) /* Not enough arguments. */
-        //    argp_usage(state);  /* Not detail help, not the output as --help */
+        if (state->arg_num < args_num) /* Not enough arguments. */
+            argp_usage(state);  /* Not detail help, not the output as --help */
         break;
     default:
         printf("-Unknown ARG | argc:%d argnum:%d next:%d => you can see the first step alway go into here!\n", 

@@ -1,0 +1,19 @@
+1, auto make
+    make XXX    =>   cc XXX.c -o XXX
+    so, if there is a C source file named as tot.c then use "make tot" can auto
+compile the tot.c file.
+    This is usable in GNU Make 3.81
+
+2, auto make with gcc 
+    CC=gcc make XXX   =>  gcc XXX.c -o XXX
+    CC=gcc; make XXX  =>  cc XXX.c -o XXX   (so without';')
+
+3, use this characteristic to wirte a makefile
+
+CC = gcc
+all:
+    find ./ -name "*.c" | sed "s/.c//" | xargs make 
+clean:
+	find ./ -name "*.c" | sed "s/.c//" | xargs rm
+
+This makefile would auto compile the C source files of current folder
