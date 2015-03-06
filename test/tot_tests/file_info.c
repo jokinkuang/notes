@@ -4,8 +4,13 @@
 #include <sys/stat.h>
 #include <sys/unistd.h>
 
-/** <time.h> have to be include, or the Source can go through compile, but can not run through!
- * Eg, while not include <time.h>, "%D %T" the %T would get a wrong hour value and others are right.
+/**
+ * Attention: 
+ * <time.h> have to be include, or the Source can go through compile, but can 
+ *  not run through!
+ * Eg, while not include <time.h>, "%D %T" the %T would get a wrong hour value 
+ * but other values are right. And without include <time.h>, 
+ * asctime(localtime(t)) even would get a segmentation fault.
  **/
 char *get_date(time_t t) {
     static char date[] = "2014-12-12 12:12:12";
@@ -47,9 +52,13 @@ int main(int argc, char **argv) {
     struct stat buf;
     stat(argv[1], &buf);
     printf("mode: %d\n", buf.st_mode);
-    printf("atime:%u | %s\n", buf.st_atime, get_date(buf.st_atime));
-    printf("mtime:%u | %s\n", buf.st_mtime, get_date(buf.st_mtime));
-    printf("ctime:%u | %s\n", buf.st_ctime, get_date(buf.st_ctime));
+    printf("ctime():%ld | %s\n", buf.st_atime, ctime(&buf.st_atime));
+    printf("gmtime():%ld | %s\n", buf.st_atime, asctime(gmtime(&buf.st_atime)));
+    printf("localtime():%ld | %s\n", buf.st_atime, asctime(localtime(&buf.st_atime)));
+
+    printf("atime:%ld | %s\n", buf.st_atime, get_date(buf.st_atime));
+    printf("mtime:%ld | %s\n", buf.st_mtime, get_date(buf.st_mtime));
+    printf("ctime:%ld | %s\n", buf.st_ctime, get_date(buf.st_ctime));
 //    printf("atime: %u %s\n", buf.st_atime, asctime(localtime(&buf.st_atime)));
 //    printf("mtime: %u %s\n", buf.st_mtime, ctime(&buf.st_mtime), "b");
 //    printf("ctime: %u %s\n", buf.st_ctime, ctime(&buf.st_ctime), "c");

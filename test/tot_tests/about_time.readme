@@ -1,0 +1,110 @@
+1, <time.h> have to be included !
+#include <stdio.h>
+//#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
+
+/**
+ * Attention: 
+ * <time.h> have to be include, or the Source can go through compile, but can 
+ *  not run through!
+ * Eg, while not include <time.h>, "%D %T" the %T would get a wrong hour value 
+ * but other values are right. And without include <time.h>, 
+ * asctime(localtime(t)) even would get a segmentation fault.
+ **/
+
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        printf("usage: %s file\n", argv[0]);
+        return 1;
+    }
+
+    struct stat buf;
+    stat(argv[1], &buf);
+    printf("atime: %u %s\n", buf.st_atime, asctime(localtime(&buf.st_atime)));
+
+    return 0;
+}
+
+2, How to transform between time_t, tm and string ?
+   /* See man ctime/man strftime/man strptime */
+
+   // tm -> string
+    char *asctime(const struct tm *tm);
+    char *asctime_r(const struct tm *tm, char *buf);
+
+   // time_t -> string
+    char *ctime(const time_t *timep);
+    char *ctime_r(const time_t *timep, char *buf);
+
+   // time_t -> tm 
+    struct tm *gmtime(const time_t *timep);
+    struct tm *gmtime_r(const time_t *timep, struct tm *result);
+
+   // time_t -> tm 
+    struct tm *localtime(const time_t *timep);
+    struct tm *localtime_r(const time_t *timep, struct tm *result);
+
+   // tm -> time_t
+    time_t mktime(struct tm *tm); 
+
+    1, asctime get string formated: "Fri Mar  6 10:26:51 2015".
+    2, ctime is like asctime, get string formated: "Fri Mar  6 10:26:51 2015".
+    3, time_t is a long integer, can printout by "%ld".
+    4, gmtime is convert the time_t to GMT datetime format.
+       localtime is convert the time_t to local time-zone datetime format.
+       but they are all the same time.
+    5, usually, the time showed in our device is localtime. but the time stored
+       in the device is a long integer, indicated the seconds 
+       since 1970-01-01 00:00:00, so we need convert it to localtime to show.
+    6, XXX and XXX_r functions are the same, but except:
+       XXX use the static allocated buffer which would be covered next called.
+       XXX_r use the user custom buffer which need passed in by the second parameter.
+    7, do not forget to include <time.h> before compilation.
+
+3, Transform between tm and format-string.
+    // tm -> string
+    size_t strftime(char *s, size_t max, const char *format,
+                    const struct tm *tm);
+
+    The strftime() function returns the number of characters placed in the 
+    array s, not including the terminating null byte. 
+    Note: the return value 0 does not necessarily indicate an error; 
+          for example, in many locales %p yields an empty string.
+
+    // string -> tm
+    char *strptime(const char *s, const char *format, struct tm *tm);
+
+    The strptime() function returns NULL is format error and convert error.
+
+    Attention: Whitespace in format matches zero or more whitespace! 
+
+4, what is time_t value, UTC time, GMT time and localtime ?
+    - time_t is a long integer indicated the seconds since 1970-01-01 00:00:00.
+    - UTC time is the standard time used by global world now. (原子时钟)
+        UTC time usually used in the Internet.
+    - GMT is the old standard time.
+    - localtime is the time of time-zone, converted by the standard time.
+
+    printf("ctime():%ld | %s\n", buf.st_atime, ctime(&buf.st_atime));
+    printf("gmtime():%ld | %s\n", buf.st_atime, asctime(gmtime(&buf.st_atime)));
+    printf("localtime():%ld | %s\n", buf.st_atime, asctime(localtime(&buf.st_atime)));
+    -------------
+    ctime():1425608811 | Fri Mar  6 10:26:51 2015   //default use localtime
+    gmtime():1425608811 | Fri Mar  6 02:26:51 2015      //GMT 
+    localtime():1425608811 | Fri Mar  6 10:26:51 2015   //localtime 
+    /* they are just the same time */
+
+You can see, time_t is the same long integer value, it's just a time stamp.
+There are two ways to show the date-time with the one time stamp.
+One is gmtime, it's the GMT(格林威治时间) Time, 02:26:51.
+The other is localtime, the time-zone Time of you, 10:26:51 (Beijing).Maybe you
+are not in Beijing, so in your localtime, maybe is XX.26.51 (Your City).But,all
+of the time, they are all 02:26:51(GMT). Just like "Fri Mar  6 10:26:51 2015",
+"2015-3-6 10:26:51"(Beijing) and "1425608811", they are just different show-
+format of one time. So if you want to compare with two time, first of all, you
+need convert to the same format: all long integer, all gmtime or all localtime.
+(同一个时间，在不同时区需要进行转换，比如GMT时间02:26:51，实际是北京时间10:26:51)
+
+

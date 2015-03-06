@@ -1,0 +1,41 @@
+CC		 = gcc
+CFLAGS   = -Wall -O -g 
+LDFLAGS	 = 
+LIBFLAGS = 
+
+TARGETPATH = target
+INCLUDES = -I./
+VPATH    = $(TARGETPATH)
+OBJS	 = tot
+vpath %.o $(TARGETPATH)
+vpath %.o ./ 
+
+TARGETS  = tot file_info
+
+.PHONY: obj target clean
+
+obj: $(OBJS)
+	make target
+%.o:%.c
+	$(CC) -c $< -o $(TARGETPATH)/$@ $(INCLUDES) $(CFLAGS)
+
+%.d:%.c
+	@set -e; $(CC) -MM $< $(INCLUDES) > $(TARGETPATH)/$@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $(TARGETPATH)/$@ : ,g' \
+	< $(TARGETPATH)/$@.$$$$ > $(TARGETPATH)/$@; \
+	rm -f $(TARGETPATH)/$@.$$$$
+
+target : $(TARGETS)
+
+tot: tot.o
+	if ! [ -d $(TARGETPATH) ]; then mkdir $(TARGETPATH); fi
+	-$(CC) -o $(TARGETPATH)/$@ $< $(INCLUDES) $(LIBFLAGS)
+	
+sinclude $(OBJS:.o=.d)
+
+clean:
+	-rm -rf $(TARGETPATH)
+	-rm $(TARGETS)
+	-mkdir $(TARGETPATH)
+	-touch $(TARGETPATH)/"make_clean_would_delete_this_folder_totally.readme"
+	# -cmd ignore the cmd return value
