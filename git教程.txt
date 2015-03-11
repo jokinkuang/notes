@@ -1,0 +1,8 @@
+git教程
+提交本地分支到远程新分支：
+    git push 远程地址名 本地分支：远程分支
+    git push origin master:新分支名
+删除远程分支：
+    git push 远程地址名 空：远程要删除的分支名
+    git push origin：远程分支名
+  
