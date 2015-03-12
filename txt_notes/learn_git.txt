@@ -159,6 +159,19 @@ Learn Git
         Switched to branch 'dev'
     3，在master分支上，合并no branch到master：
         git merge d4959cd       //上面看到的最新的提交的hash code。
+
+十，永久删除仓库里某个文件或目录以减少仓库的体积
+    https://help.github.com/articles/remove-sensitive-data/
+    1，git filter-branch --force --index-filter \
+       'git rm --cached --ignore-unmatch Rakefile' \
+        --prune-empty --tag-name-filter cat -- --all
+      # 将Rakefile替换为要删除的文件或-rf 目录。
+    2，git reflog expire --expire=now --all
+       git gc --prune=now
+      # 重新生成log。
+    3，git push origin --force --all
+       git push origin --force --tags 
+      # 提交到github，以同步到github
 =================================================================
 常用操作：
     1，git fetch ： 将远程分支更新。git pull相当于 git fetch + git merge
