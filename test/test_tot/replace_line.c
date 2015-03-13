@@ -44,25 +44,13 @@ int main(int argc, char **argv) {
     c = getc(srcfp);
     while (c != EOF) {
         if (line == delete_line) {
-            while (c != '\n') {
+            while ((c = getc(srcfp)) != '\n') {
                 printf("%c", c);
-                c = getc(srcfp);
             }
-            /* get a '\n' means the line end */
-            printf("Enter new text:");
-            fflush(stdin);
-            fflush(stdin);
-            printf("====%c====\n", getchar());
-            while ((c = getchar()) != '\n')
-                putc(c, dstfp);
-            printf("\n");
-            fputs("\n", dstfp);
-            line++;
-        } else if (c == '\n') {
-            printf("\n%d ", ++line);
+        }
+        if (c == '\n') {
+            printf("%d ", ++line);
         } else {
-            printf("%c", c);
-#if 0
             //till the line to be deleted comes,copy the content to other
             if (line != delete_line) {
                 putc(c, dstfp);
@@ -82,7 +70,6 @@ int main(int argc, char **argv) {
                 fputs("\n", dstfp);
                 line++;
             }
-#endif
         }
         //continue this till EOF is encountered
         c = getc(srcfp);
