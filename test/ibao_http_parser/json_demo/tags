@@ -1,0 +1,99 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+_CRT_SECURE_NO_WARNINGS	json.c	34;"	d	file:
+_JSON_H	json.h	32;"	d
+_json_value	json.h	/^         inline _json_value ()$/;"	f	struct:_json_value
+_json_value	json.h	/^typedef struct _json_value$/;"	s
+_reserved	json.h	/^   } _reserved;$/;"	m	struct:_json_value	typeref:union:_json_value::__anon8
+array	json.h	/^      } array;$/;"	m	union:_json_value::__anon3	typeref:struct:_json_value::__anon3::__anon7
+begin	json.h	/^         decltype(values) begin () const$/;"	f	struct:_json_value::__anon3::__anon5
+begin	json.h	/^         decltype(values) begin () const$/;"	f	struct:_json_value::__anon3::__anon7
+boolean	json.h	/^      int boolean;$/;"	m	union:_json_value::__anon3
+dbl	json.h	/^      double dbl;$/;"	m	union:_json_value::__anon3
+default_alloc	json.c	/^static void * default_alloc (size_t size, int zero, void * user_data)$/;"	f	file:
+default_free	json.c	/^static void default_free (void * ptr, void * user_data)$/;"	f	file:
+e_off	json.c	182;"	d	file:
+end	json.h	/^         decltype(values) end () const$/;"	f	struct:_json_value::__anon3::__anon5
+end	json.h	/^         decltype(values) end () const$/;"	f	struct:_json_value::__anon3::__anon7
+first_pass	json.c	/^   int first_pass;$/;"	m	struct:__anon9	file:
+flag_block_comment	json.c	/^   flag_block_comment    = 1 << 14;$/;"	v	file:
+flag_done	json.c	/^   flag_done             = 1 << 7,$/;"	v	file:
+flag_escaped	json.c	/^   flag_escaped          = 1 << 4,$/;"	v	file:
+flag_line_comment	json.c	/^   flag_line_comment     = 1 << 13,$/;"	v	file:
+flag_need_colon	json.c	/^   flag_need_colon       = 1 << 6,$/;"	v	file:
+flag_need_comma	json.c	/^   flag_need_comma       = 1 << 2,$/;"	v	file:
+flag_next	json.c	/^   flag_next             = 1 << 0,$/;"	v	file:
+flag_num_e	json.c	/^   flag_num_e            = 1 << 10,$/;"	v	file:
+flag_num_e_got_sign	json.c	/^   flag_num_e_got_sign   = 1 << 11,$/;"	v	file:
+flag_num_e_negative	json.c	/^   flag_num_e_negative   = 1 << 12,$/;"	v	file:
+flag_num_negative	json.c	/^   flag_num_negative     = 1 << 8,$/;"	v	file:
+flag_num_zero	json.c	/^   flag_num_zero         = 1 << 9,$/;"	v	file:
+flag_reproc	json.c	/^   flag_reproc           = 1 << 1,$/;"	v	file:
+flag_seek_value	json.c	/^   flag_seek_value       = 1 << 3, $/;"	v	file:
+flag_string	json.c	/^   flag_string           = 1 << 5,$/;"	v	file:
+hex_value	json.c	/^static unsigned char hex_value (json_char c)$/;"	f	file:
+integer	json.h	/^      json_int_t integer;$/;"	m	union:_json_value::__anon3
+json_alloc	json.c	/^static void * json_alloc (json_state * state, unsigned long size, int zero)$/;"	f	file:
+json_array	json.h	/^   json_array,$/;"	e	enum:__anon2
+json_boolean	json.h	/^   json_boolean,$/;"	e	enum:__anon2
+json_char	json.h	35;"	d
+json_double	json.h	/^   json_double,$/;"	e	enum:__anon2
+json_enable_comments	json.h	73;"	d
+json_error_max	json.h	249;"	d
+json_int_t	json.h	41;"	d
+json_int_t	json.h	43;"	d
+json_integer	json.h	/^   json_integer,$/;"	e	enum:__anon2
+json_none	json.h	/^   json_none,$/;"	e	enum:__anon2
+json_null	json.h	/^   json_null$/;"	e	enum:__anon2
+json_object	json.h	/^   json_object,$/;"	e	enum:__anon2
+json_parse	json.c	/^json_value * json_parse (const json_char * json, size_t length)$/;"	f
+json_parse_ex	json.c	/^json_value * json_parse_ex (json_settings * settings,$/;"	f
+json_settings	json.h	/^} json_settings;$/;"	t	typeref:struct:__anon1
+json_state	json.c	/^} json_state;$/;"	t	typeref:struct:__anon9	file:
+json_string	json.h	/^   json_string,$/;"	e	enum:__anon2
+json_type	json.h	/^} json_type;$/;"	t	typeref:enum:__anon2
+json_uchar	json.c	/^typedef unsigned short json_uchar;$/;"	t	file:
+json_value	json.h	/^} json_value;$/;"	t	typeref:struct:_json_value
+json_value_free	json.c	/^void json_value_free (json_value * value)$/;"	f
+json_value_free_ex	json.c	/^void json_value_free_ex (json_settings * settings, json_value * value)$/;"	f
+json_value_none	json.c	/^   const struct _json_value json_value_none = { 0 };$/;"	v	typeref:struct:_json_value
+json_value_none	json.c	/^   const struct _json_value json_value_none; \/* zero-d by ctor *\/$/;"	v	typeref:struct:_json_value
+length	json.h	/^         unsigned int length;$/;"	m	struct:_json_value::__anon3::__anon4
+length	json.h	/^         unsigned int length;$/;"	m	struct:_json_value::__anon3::__anon5
+length	json.h	/^         unsigned int length;$/;"	m	struct:_json_value::__anon3::__anon7
+main	json_demo.c	/^int main(int argc, char **argv) {$/;"	f
+max_memory	json.h	/^   unsigned long max_memory;$/;"	m	struct:__anon1
+mem_alloc	json.h	/^   void * (* mem_alloc) (size_t, int zero, void * user_data);$/;"	m	struct:__anon1
+mem_free	json.h	/^   void (* mem_free) (void *, void * user_data);$/;"	m	struct:__anon1
+name	json.h	/^            json_char * name;$/;"	m	struct:_json_value::__anon3::__anon5::__anon6
+name_length	json.h	/^            unsigned int name_length;$/;"	m	struct:_json_value::__anon3::__anon5::__anon6
+new_value	json.c	/^static int new_value$/;"	f	file:
+next_alloc	json.h	/^      struct _json_value * next_alloc;$/;"	m	union:_json_value::__anon8	typeref:struct:_json_value::__anon8::_json_value
+object	json.h	/^      } object;$/;"	m	union:_json_value::__anon3	typeref:struct:_json_value::__anon3::__anon5
+object_mem	json.h	/^      void * object_mem;$/;"	m	union:_json_value::__anon8
+operator []	json.h	/^         inline const struct _json_value &operator [] (const char * index) const$/;"	f	struct:_json_value
+operator []	json.h	/^         inline const struct _json_value &operator [] (int index) const$/;"	f	struct:_json_value
+operator bool	json.h	/^         inline operator bool () const$/;"	f	struct:_json_value
+operator const char *	json.h	/^         inline operator const char * () const$/;"	f	struct:_json_value
+operator double	json.h	/^         inline operator double () const$/;"	f	struct:_json_value
+operator json_int_t	json.h	/^         inline operator json_int_t () const$/;"	f	struct:_json_value
+parent	json.h	/^   struct _json_value * parent;$/;"	m	struct:_json_value	typeref:struct:_json_value::_json_value
+ptr	json.h	/^         json_char * ptr; \/* null terminated *\/$/;"	m	struct:_json_value::__anon3::__anon4
+settings	json.c	/^   json_settings settings;$/;"	m	struct:__anon9	file:
+settings	json.h	/^   int settings;$/;"	m	struct:__anon1
+string	json.h	/^      } string;$/;"	m	union:_json_value::__anon3	typeref:struct:_json_value::__anon3::__anon4
+string_add	json.c	189;"	d	file:
+type	json.h	/^   json_type type;$/;"	m	struct:_json_value
+u	json.h	/^   } u;$/;"	m	struct:_json_value	typeref:union:_json_value::__anon3
+uint_max	json.c	/^   unsigned int uint_max;$/;"	m	struct:__anon9	file:
+ulong_max	json.c	/^   unsigned long ulong_max;$/;"	m	struct:__anon9	file:
+used_memory	json.c	/^   unsigned long used_memory;$/;"	m	struct:__anon9	file:
+user_data	json.h	/^   void * user_data;  \/* will be passed to mem_alloc and mem_free *\/$/;"	m	struct:__anon1
+value	json.h	/^            struct _json_value * value;$/;"	m	struct:_json_value::__anon3::__anon5::__anon6	typeref:struct:_json_value::__anon3::__anon5::__anon6::_json_value
+values	json.h	/^         struct _json_value ** values;$/;"	m	struct:_json_value::__anon3::__anon7	typeref:struct:_json_value::__anon3::__anon7::_json_value
+values	json.h	/^         } * values;$/;"	m	struct:_json_value::__anon3::__anon5	typeref:struct:_json_value::__anon3::__anon5::__anon6
+whitespace	json.c	185;"	d	file:

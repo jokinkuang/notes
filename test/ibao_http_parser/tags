@@ -1,0 +1,11 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BUF_LEN	ibao_http.c	9;"	d	file:
+G_buf	ibao_http.c	/^char G_buf[BUF_LEN];$/;"	v
+__safe_write	ibao_http.c	/^static inline ssize_t __safe_write(int fd, const char *buf, size_t size) {$/;"	f	file:
+__send_request_to_server	ibao_http.c	/^static int __send_request_to_server(const char *ip, int port, const char *request, char *resp_buf, ssize_t resp_buf_len) {$/;"	f	file:
+main	ibao_http.c	/^int main(int argc, char **argv) {$/;"	f
